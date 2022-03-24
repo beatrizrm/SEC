@@ -4,8 +4,8 @@ import java.util.List;
 
 public class BankAccount {
 
-    int balance;
-    List<Transaction> transactionsHistory;
+    private int balance;
+    private List<Transaction> transactionsHistory;
 
     public BankAccount(int balance) {
         this.balance = balance;
@@ -35,6 +35,12 @@ public class BankAccount {
     public void confirm_deposit(int amount){
         if(amount != 0){
             this.balance += amount;
+        }
+    }
+
+    public void confirm_withdrawal(int amount){
+        if(amount != 0){
+            this.balance -= amount;
         }
     }
 

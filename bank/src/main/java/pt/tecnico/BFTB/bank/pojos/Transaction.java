@@ -4,27 +4,59 @@ import java.util.Date;
 
 public class Transaction {
 
-    // flag: 0 for '-' and 1 for '+'
-    int flag;
-    int amount;
+    // id: transaction identifier
+    private int id;
+    // source: transaction source
+    private String source;
+    // destination: transaction destination
+    private String destination;
+    // sign: 0 for '-' and 1 for '+'
+    private int sign;
+    // amount: money involved in the transaction
+    private int amount;
     // status: 0 for not confirmed and 1 for confirmed
-    int status;
+    private int status;
     // timeStamp guarantees freshness
-    String timeStamp;
+    private String timeStamp;
 
-    public Transaction(int flag, int amount, int status, String timeStamp) {
-        this.flag = flag;
+    public Transaction(int id, String source, String destination, int sign, int amount, int status, String timeStamp) {
+        this.id = id;
+        this.sign = sign;
         this.amount = amount;
         this.status = status;
         this.timeStamp = timeStamp;
     }
 
-    public int getFlag() {
-        return flag;
+    public int getId() {
+        return id;
     }
 
-    public void setFlag(int flag) {
-        this.flag = flag;
+    public void setId(int id) {
+        this.id = id;
+    }
+
+    public String getSource() {
+        return source;
+    }
+
+    public void setSource(String source) {
+        this.source = source;
+    }
+
+    public String getDestination() {
+        return destination;
+    }
+
+    public void setDestination(String destination) {
+        this.destination = destination;
+    }
+
+    public int getSign() {
+        return sign;
+    }
+
+    public void setSign(int sign) {
+        this.sign = sign;
     }
 
     public int getAmount() {
@@ -54,7 +86,7 @@ public class Transaction {
     @Override
     public String toString() {
         String depOrWith = "";
-        if(flag == 1){
+        if(sign == 1){
             depOrWith = "+";
         } else {
             depOrWith = "-";

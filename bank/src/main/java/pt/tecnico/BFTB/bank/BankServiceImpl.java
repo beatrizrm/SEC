@@ -3,6 +3,7 @@ package pt.tecnico.BFTB.bank;
 import io.grpc.stub.StreamObserver;
 
 import pt.tecnico.BFTB.bank.grpc.*;
+import pt.tecnico.BFTB.bank.pojos.BankAccount;
 import pt.tecnico.BFTB.bank.pojos.Transaction;
 
 import java.text.SimpleDateFormat;
@@ -14,114 +15,117 @@ import static io.grpc.Status.INVALID_ARGUMENT;
 public class BankServiceImpl extends BankServiceGrpc.BankServiceImplBase{
 
     private  BankManager bankAccounts;
+    private int transactionId;
 
     public BankServiceImpl() {
         this.bankAccounts = new BankManager();
     }
 
     @Override
-    public void readBalance(BankReadBalanceRequest request, StreamObserver<BankReadBalanceResponse> responseObserver) {
+    public void openAccount(openAccountRequest request, StreamObserver<openAccountResponse> responseObserver) {
         String key = request.getKey();
 
         if (key == null || key.isBlank()) {
             responseObserver.onError(
-                    INVALID_ARGUMENT.withDescription("ReadBalance: Client Key cannot be empty!").asRuntimeException());
+                    INVALID_ARGUMENT.withDescription("openAccount: Client Key cannot be empty!").asRuntimeException());
             responseObserver.onCompleted();
         }
 
-        String balance = String.valueOf(bankAccounts.readBankAccountBalance(key));
+        int status = bankAccounts.openAccount(key);
 
-        BankReadBalanceResponse response = BankReadBalanceResponse.newBuilder().setBalance(balance).build();
+        openAccountResponse response = openAccountResponse.newBuilder().setStatus(status).build();
         responseObserver.onNext(response);
         responseObserver.onCompleted();
     }
 
     @Override
-    public void readTransactionHistory(BankReadTransactionHistoryRequest request, StreamObserver<BankReadTransactionHistoryResponse> responseObserver) {
-        String key = request.getKey();
-        int status = request.getStatus();
+    public void sendAmount(sendAmountRequest request, StreamObserver<sendAmountResponse> responseObserver) {
+        String sourceKey = request.getSourceKey();
+        String destinationKey = request.getDestinationKey();
+        String amount = request.getAmount();
+        String timeStamp = new SimpleDateFormat("yyyy.MM.dd.HH.mm.ss").format(new Date());
 
-        if (key == null || key.isBlank()) {
+        if (sourceKey == null || sourceKey.isBlank()) {
             responseObserver.onError(
-                    INVALID_ARGUMENT.withDescription("ReadTransactionHistory: Client Key cannot be empty!").asRuntimeException());
+                    INVALID_ARGUMENT.withDescription("sendAmount: Source Key cannot be empty!").asRuntimeException());
             responseObserver.onCompleted();
         }
 
-        List<Transaction> transactionHistory = bankAccounts.readBankAccountTransactionHistory(key);
+        if (destinationKey == null || destinationKey.isBlank()) {
+            responseObserver.onError(
+                    INVALID_ARGUMENT.withDescription("sendAmount: Destination Key cannot be empty!").asRuntimeException());
+            responseObserver.onCompleted();
+        }
 
-        String transactionsHistory = "";
+        if (amount == null || amount.isBlank() || Integer.parseInt(amount) <= 0) {
+            responseObserver.onError(
+                    INVALID_ARGUMENT.withDescription("sendAmount: Amount cannot be empty!").asRuntimeException());
+            responseObserver.onCompleted();
+        }
+
+        int status = bankAccounts.checkIfTransactionPossible(sourceKey, Integer.parseInt(amount));
+
+        Transaction transactionSend = new Transaction(transactionId, sourceKey, destinationKey,0, Integer.parseInt(amount), 0, timeStamp);
+        Transaction transactionReceive = new Transaction(transactionId, sourceKey, destinationKey,1, Integer.parseInt(amount), 0, timeStamp);
+        transactionId++;
+
+        bankAccounts.addTransactionHistory(sourceKey, transactionSend);
+        bankAccounts.addTransactionHistory(destinationKey, transactionReceive);
+
+        sendAmountResponse response = sendAmountResponse.newBuilder().setStatus(status).build();
+        responseObserver.onNext(response);
+        responseObserver.onCompleted();
+    }
+
+    @Override
+    public void checkAccount(checkAccountRequest request, StreamObserver<checkAccountResponse> responseObserver) {
+        String key = request.getKey();
+
+        if (key == null || key.isBlank()) {
+            responseObserver.onError(
+                    INVALID_ARGUMENT.withDescription("checkAccount: Client Key cannot be empty!").asRuntimeException());
+            responseObserver.onCompleted();
+        }
+
+        String balance = String.valueOf(bankAccounts.checkBalance(key));
+
+        List<Transaction> transactionHistory = bankAccounts.checkPendingTransactions(key);
+
+        String pendingTransactions = "";
 
         for(Transaction temp: transactionHistory){
-            if(temp.getStatus() == status){
-                transactionsHistory += temp.toString();
+            if(temp.getStatus() == 0){
+                pendingTransactions += temp.toString();
             }
         }
 
-
-        BankReadTransactionHistoryResponse response = BankReadTransactionHistoryResponse.newBuilder().setTransactionsHistory(transactionsHistory).build();
+        checkAccountResponse response = checkAccountResponse.newBuilder().setBalance(balance).setPendingTransactions(pendingTransactions).build();
         responseObserver.onNext(response);
         responseObserver.onCompleted();
     }
 
     @Override
-    public void writeBalance(BankWriteBalanceRequest request, StreamObserver<BankWriteBalanceResponse> responseObserver) {
+    public void receiveAmount(receiveAmountRequest request, StreamObserver<receiveAmountResponse> responseObserver) {
         String key = request.getKey();
-        String amount = request.getAmount();
+        String transactionID = request.getTransactionId();
 
-        // Throws exception if key is null or is an empty string
         if (key == null || key.isBlank()) {
             responseObserver.onError(
-                    INVALID_ARGUMENT.withDescription("WriteBalance: Client Key cannot be empty!").asRuntimeException());
+                    INVALID_ARGUMENT.withDescription("receiveAmount: Client Key cannot be empty!").asRuntimeException());
             responseObserver.onCompleted();
         }
 
-        // Throws exception if value is null
-        if (amount == null) {
+        if (transactionID == null || transactionID.isBlank()) {
             responseObserver.onError(
-                    INVALID_ARGUMENT.withDescription("WriteBalance: Amount cannot be null!").asRuntimeException());
+                    INVALID_ARGUMENT.withDescription("receiveAmount: TransactionId cannot be empty!").asRuntimeException());
             responseObserver.onCompleted();
         }
 
-        // Adds the amount
-        bankAccounts.addAmount(key, amount);
+        int status = bankAccounts.receiveAmount(key, transactionID);
 
 
-        String output = "Balance updated with Success!";
-        BankWriteBalanceResponse response = BankWriteBalanceResponse.newBuilder().setStatus(output).build();
+        receiveAmountResponse response = receiveAmountResponse.newBuilder().setStatus(status).build();
         responseObserver.onNext(response);
         responseObserver.onCompleted();
     }
-
-    @Override
-    public void writeTransactionHistory(BankWriteTransactionHistoryRequest request, StreamObserver<BankWriteTransactionHistoryResponse> responseObserver) {
-        String key = request.getKey();
-        String amount = request.getTransactionAmount();
-        String flag = request.getFlag();
-        String timeStamp = new SimpleDateFormat("yyyy.MM.dd.HH.mm.ss").format(new Date());
-
-        // Throws exception if key is null or is an empty string
-        if (key == null || key.isBlank()) {
-            responseObserver.onError(
-                    INVALID_ARGUMENT.withDescription("WriteTransactionHistory: Client Key cannot be empty!").asRuntimeException());
-            responseObserver.onCompleted();
-        }
-
-        // Throws exception if value is null
-        if (amount == null) {
-            responseObserver.onError(
-                    INVALID_ARGUMENT.withDescription("WriteTransactionHistory: Amount cannot be null!").asRuntimeException());
-            responseObserver.onCompleted();
-        }
-
-        Transaction transaction = new Transaction(Integer.parseInt(flag), Integer.parseInt(amount), 0, timeStamp);
-
-        // Adds the not confirmed transaction
-        bankAccounts.addTransactionHistory(key, transaction);
-
-        String output = "Transaction saved with Success!";
-        BankWriteTransactionHistoryResponse response = BankWriteTransactionHistoryResponse.newBuilder().setStatus(output).build();
-        responseObserver.onNext(response);
-        responseObserver.onCompleted();
-    }
-
 }
