@@ -15,6 +15,12 @@ import pt.tecnico.BFTB.bank.grpc.receiveAmountResponse;
 import pt.tecnico.BFTB.bank.grpc.auditRequest;
 import pt.tecnico.BFTB.bank.grpc.auditResponse;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.util.Objects;
+
 public class ClientServiceImpl {
 
     private String _BankHost;
@@ -158,6 +164,14 @@ public class ClientServiceImpl {
             response = "ERRO " + e.getMessage();
         }
         return response;
+    }
+
+    // Opens a resource file in the src/main/resource folder
+    public BufferedReader openResourcesFile(String filePath) throws FileNotFoundException {
+        ClassLoader classLoader = getClass().getClassLoader();
+        File file = new File(Objects.requireNonNull(classLoader.getResource(filePath)).getFile());
+        return new BufferedReader(new FileReader(file));
+
     }
 }
 
