@@ -49,7 +49,7 @@ public class BankManager {
      */
     public synchronized int openAccount(String key) {
         int status = 0;
-        if(bankAccounts.get(key) != null){
+        if(bankAccounts.get(key) == null){
             BankAccount bankAccount = new BankAccount(500);
             bankAccounts.put(key, bankAccount);
             status = 1;
