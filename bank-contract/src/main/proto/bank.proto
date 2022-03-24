@@ -1,0 +1,104 @@
+//
+// Protocol buffers definition
+//
+syntax = "proto3";
+package pt.tecnico.BFTB.bank.grpc;
+
+// The following option causes top-level messages, enums, and services to be defined at the package level,
+// rather than inside an outer class named after the .proto file.
+option java_multiple_files = true;
+
+message BankReadBalanceRequest {
+  string key = 1;
+}
+
+message BankReadBalanceResponse {
+  string balance = 1;
+}
+
+message BankWriteBalanceRequest {
+  string key = 1;
+  string amount = 2;
+}
+
+message BankWriteBalanceResponse {
+  string status = 1;
+}
+
+message BankReadTransactionHistoryRequest {
+  string key = 1;
+  int32 status = 2;
+}
+
+message BankReadTransactionHistoryResponse {
+  string transactionsHistory = 1;
+}
+
+message BankWriteTransactionHistoryRequest {
+  string key = 1;
+  string transactionAmount = 2;
+  string flag = 3;
+}
+
+message BankWriteTransactionHistoryResponse {
+  string status = 1;
+}
+
+// --------------------------------------------------------------------
+
+message openAccountRequest {
+  string key = 1;
+}
+
+message openAccountResponse {
+  int32 status = 1;
+}
+
+message auditRequest {
+  string key = 1;
+}
+
+message auditResponse {
+  string transactionHistory = 1;
+}
+
+message receiveAmountRequest {
+  string key = 1;
+  string transactionId = 2;
+}
+
+message receiveAmountResponse {
+  int32 status = 1;
+}
+
+message checkAccountRequest {
+  string key = 1;
+}
+
+message checkAccountResponse {
+  string balance = 1;
+  string pendingTransactions = 2;
+}
+
+message sendAmountRequest {
+  string sourceKey = 1;
+  string destinationKey = 2;
+  string amount = 3;
+}
+
+message sendAmountResponse {
+  int32 status = 1;
+}
+
+service BankService {
+  rpc openAccount(openAccountRequest) returns (openAccountResponse);
+  rpc sendAmount(sendAmountRequest) returns (sendAmountResponse);
+  rpc checkAccount(checkAccountRequest) returns (checkAccountResponse);
+  rpc receiveAmount(receiveAmountRequest) returns (receiveAmountResponse);
+  rpc audit(auditRequest) returns (auditResponse);
+  //
+  rpc readBalance(BankReadBalanceRequest) returns (BankReadBalanceResponse);
+  rpc readTransactionHistory(BankReadTransactionHistoryRequest) returns (BankReadTransactionHistoryResponse);
+  rpc writeBalance(BankWriteBalanceRequest) returns (BankWriteBalanceResponse);
+  rpc writeTransactionHistory(BankWriteTransactionHistoryRequest) returns (BankWriteTransactionHistoryResponse);
+}

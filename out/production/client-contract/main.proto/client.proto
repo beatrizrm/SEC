@@ -1,0 +1,59 @@
+//
+// Protocol buffers definition
+//
+syntax = "proto3";
+package pt.tecnico.BFTB.client.grpc;
+// The following option causes top-level messages, enums, and services to be defined at the package level,
+// rather than inside an outer class named after the .proto file.
+option java_multiple_files = true;
+
+message OpenAccountRequest {
+  int32 key = 1;
+}
+
+message OpenAccountResponse {
+  int32 status = 1;
+}
+
+message SendAmountRequest {
+  int32 sourceKey = 1;
+  int32 destinationKey = 2;
+  int32 amount = 3;
+}
+
+message SendAmountResponse {
+  int32 status = 1;
+}
+
+message CheckAccountRequest {
+  int32 key = 1;
+}
+
+message CheckAccountResponse {
+  int32 balance = 1;
+  repeated int32 transfers = 2;
+}
+
+message ReceiveAmountRequest {
+  int32 key = 1;
+}
+
+message ReceiveAmountResponse {
+  int32 status = 1;
+}
+
+message AuditRequest {
+  int32 key = 1;
+}
+
+message AuditResponse {
+  repeated string transactionHistory = 1;
+}
+
+service ClientService {
+  rpc open_account(OpenAccountRequest) returns (OpenAccountResponse);
+  rpc send_amount(SendAmountRequest) returns (SendAmountResponse);
+  rpc check_account(CheckAccountRequest) returns (CheckAccountResponse);
+  rpc receive_amount(ReceiveAmountRequest) returns (ReceiveAmountResponse);
+  rpc audit(AuditRequest) returns (AuditResponse);
+}
