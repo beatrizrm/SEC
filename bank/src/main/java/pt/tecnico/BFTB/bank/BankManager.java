@@ -63,7 +63,7 @@ public class BankManager {
      * @param key
      * @return The value of the balance of the bankAccount with key {@code key}
      */
-    public synchronized List<Transaction> checkPendingTransactions(String key) {
+    public synchronized List<Transaction> checkTransactions(String key) {
         BankAccount bankAccount = bankAccounts.get(key);
         return bankAccount.getTransactionHistory();
     }

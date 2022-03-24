@@ -3,7 +3,6 @@ package pt.tecnico.BFTB.bank;
 import io.grpc.stub.StreamObserver;
 
 import pt.tecnico.BFTB.bank.grpc.*;
-import pt.tecnico.BFTB.bank.pojos.BankAccount;
 import pt.tecnico.BFTB.bank.pojos.Transaction;
 
 import java.text.SimpleDateFormat;
@@ -89,7 +88,7 @@ public class BankServiceImpl extends BankServiceGrpc.BankServiceImplBase{
 
         String balance = String.valueOf(bankAccounts.checkBalance(key));
 
-        List<Transaction> transactionHistory = bankAccounts.checkPendingTransactions(key);
+        List<Transaction> transactionHistory = bankAccounts.checkTransactions(key);
 
         String pendingTransactions = "";
 
@@ -125,6 +124,29 @@ public class BankServiceImpl extends BankServiceGrpc.BankServiceImplBase{
 
 
         receiveAmountResponse response = receiveAmountResponse.newBuilder().setStatus(status).build();
+        responseObserver.onNext(response);
+        responseObserver.onCompleted();
+    }
+
+    @Override
+    public void audit(auditRequest request, StreamObserver<auditResponse> responseObserver) {
+        String key = request.getKey();
+
+        if (key == null || key.isBlank()) {
+            responseObserver.onError(
+                    INVALID_ARGUMENT.withDescription("checkAccount: Client Key cannot be empty!").asRuntimeException());
+            responseObserver.onCompleted();
+        }
+
+        List<Transaction> transactions = bankAccounts.checkTransactions(key);
+
+        String transactionHistory = "";
+
+        for(Transaction temp: transactions){
+            transactionHistory += temp.toString();
+        }
+
+        auditResponse response = auditResponse.newBuilder().setTransactionHistory(transactionHistory).build();
         responseObserver.onNext(response);
         responseObserver.onCompleted();
     }
