@@ -1,5 +1,6 @@
 package pt.tecnico.BFTB.bank.pojos;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class BankAccount {
@@ -9,7 +10,7 @@ public class BankAccount {
 
     public BankAccount(int balance) {
         this.balance = balance;
-        this.transactionsHistory = null;
+        this.transactionsHistory = new ArrayList<>();
     }
 
     public int getBalance() {

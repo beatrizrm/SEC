@@ -23,7 +23,7 @@
         <mainclass>pt.tecnico.BFTB.bank.BankMain</mainclass>
 
         <bank.host>localhost</bank.host>
-        <hub.port>8080</hub.port>
+        <bank.port>8080</bank.port>
     </properties>
 
     <!-- Dependencies are code archives - JARs - on which your current module

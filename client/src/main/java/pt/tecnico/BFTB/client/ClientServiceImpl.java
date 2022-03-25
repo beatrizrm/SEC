@@ -76,8 +76,8 @@ public class ClientServiceImpl {
     }
 
     // Sends a balance request and returns the balance
-    private int receiveAmountRequest(String _userKey) throws RuntimeException {
-        receiveAmountRequest request = receiveAmountRequest.newBuilder().setKey(_userKey).build();
+    private int receiveAmountRequest(String _userKey, String _transactionId) throws RuntimeException {
+        receiveAmountRequest request = receiveAmountRequest.newBuilder().setKey(_userKey).setTransactionId(_transactionId).build();
         receiveAmountResponse response = _stub.receiveAmount(request);
         return response.getStatus();
     }
@@ -136,10 +136,10 @@ public class ClientServiceImpl {
                     response = checkAccountRequest(args[1]);
                     break;
                 case "receive_amount":
-                    if (args.length != 2) {
+                    if (args.length != 3) {
                         throw new RuntimeException("Invalid command receive_amount");
                     }
-                    int status3 = receiveAmountRequest(args[1]);
+                    int status3 = receiveAmountRequest(args[1], args[2]);
                     if(status3 == 1){
                         response = "OK";
                     } else {

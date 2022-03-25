@@ -21,6 +21,8 @@ public class Transaction {
 
     public Transaction(int id, String source, String destination, int sign, int amount, int status, String timeStamp) {
         this.id = id;
+        this.source = source;
+        this.destination = destination;
         this.sign = sign;
         this.amount = amount;
         this.status = status;
@@ -91,9 +93,8 @@ public class Transaction {
         } else {
             depOrWith = "-";
         }
-        return "Transaction{ " + depOrWith +
-                amount +
-                ", " + status + ", " + timeStamp +
+        return " Transaction{ "+ id + "/ " + source + ", "+ destination + "/ "+ depOrWith + amount +
+                "/ " + status + "/ " + timeStamp +
                 '}';
     }
 }

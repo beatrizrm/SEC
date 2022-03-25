@@ -169,130 +169,6 @@ public final class BankServiceGrpc {
     return getAuditMethod;
   }
 
-  private static volatile io.grpc.MethodDescriptor<pt.tecnico.BFTB.bank.grpc.BankReadBalanceRequest,
-      pt.tecnico.BFTB.bank.grpc.BankReadBalanceResponse> getReadBalanceMethod;
-
-  @io.grpc.stub.annotations.RpcMethod(
-      fullMethodName = SERVICE_NAME + '/' + "readBalance",
-      requestType = pt.tecnico.BFTB.bank.grpc.BankReadBalanceRequest.class,
-      responseType = pt.tecnico.BFTB.bank.grpc.BankReadBalanceResponse.class,
-      methodType = io.grpc.MethodDescriptor.MethodType.UNARY)
-  public static io.grpc.MethodDescriptor<pt.tecnico.BFTB.bank.grpc.BankReadBalanceRequest,
-      pt.tecnico.BFTB.bank.grpc.BankReadBalanceResponse> getReadBalanceMethod() {
-    io.grpc.MethodDescriptor<pt.tecnico.BFTB.bank.grpc.BankReadBalanceRequest, pt.tecnico.BFTB.bank.grpc.BankReadBalanceResponse> getReadBalanceMethod;
-    if ((getReadBalanceMethod = BankServiceGrpc.getReadBalanceMethod) == null) {
-      synchronized (BankServiceGrpc.class) {
-        if ((getReadBalanceMethod = BankServiceGrpc.getReadBalanceMethod) == null) {
-          BankServiceGrpc.getReadBalanceMethod = getReadBalanceMethod =
-              io.grpc.MethodDescriptor.<pt.tecnico.BFTB.bank.grpc.BankReadBalanceRequest, pt.tecnico.BFTB.bank.grpc.BankReadBalanceResponse>newBuilder()
-              .setType(io.grpc.MethodDescriptor.MethodType.UNARY)
-              .setFullMethodName(generateFullMethodName(SERVICE_NAME, "readBalance"))
-              .setSampledToLocalTracing(true)
-              .setRequestMarshaller(io.grpc.protobuf.ProtoUtils.marshaller(
-                  pt.tecnico.BFTB.bank.grpc.BankReadBalanceRequest.getDefaultInstance()))
-              .setResponseMarshaller(io.grpc.protobuf.ProtoUtils.marshaller(
-                  pt.tecnico.BFTB.bank.grpc.BankReadBalanceResponse.getDefaultInstance()))
-              .setSchemaDescriptor(new BankServiceMethodDescriptorSupplier("readBalance"))
-              .build();
-        }
-      }
-    }
-    return getReadBalanceMethod;
-  }
-
-  private static volatile io.grpc.MethodDescriptor<pt.tecnico.BFTB.bank.grpc.BankReadTransactionHistoryRequest,
-      pt.tecnico.BFTB.bank.grpc.BankReadTransactionHistoryResponse> getReadTransactionHistoryMethod;
-
-  @io.grpc.stub.annotations.RpcMethod(
-      fullMethodName = SERVICE_NAME + '/' + "readTransactionHistory",
-      requestType = pt.tecnico.BFTB.bank.grpc.BankReadTransactionHistoryRequest.class,
-      responseType = pt.tecnico.BFTB.bank.grpc.BankReadTransactionHistoryResponse.class,
-      methodType = io.grpc.MethodDescriptor.MethodType.UNARY)
-  public static io.grpc.MethodDescriptor<pt.tecnico.BFTB.bank.grpc.BankReadTransactionHistoryRequest,
-      pt.tecnico.BFTB.bank.grpc.BankReadTransactionHistoryResponse> getReadTransactionHistoryMethod() {
-    io.grpc.MethodDescriptor<pt.tecnico.BFTB.bank.grpc.BankReadTransactionHistoryRequest, pt.tecnico.BFTB.bank.grpc.BankReadTransactionHistoryResponse> getReadTransactionHistoryMethod;
-    if ((getReadTransactionHistoryMethod = BankServiceGrpc.getReadTransactionHistoryMethod) == null) {
-      synchronized (BankServiceGrpc.class) {
-        if ((getReadTransactionHistoryMethod = BankServiceGrpc.getReadTransactionHistoryMethod) == null) {
-          BankServiceGrpc.getReadTransactionHistoryMethod = getReadTransactionHistoryMethod =
-              io.grpc.MethodDescriptor.<pt.tecnico.BFTB.bank.grpc.BankReadTransactionHistoryRequest, pt.tecnico.BFTB.bank.grpc.BankReadTransactionHistoryResponse>newBuilder()
-              .setType(io.grpc.MethodDescriptor.MethodType.UNARY)
-              .setFullMethodName(generateFullMethodName(SERVICE_NAME, "readTransactionHistory"))
-              .setSampledToLocalTracing(true)
-              .setRequestMarshaller(io.grpc.protobuf.ProtoUtils.marshaller(
-                  pt.tecnico.BFTB.bank.grpc.BankReadTransactionHistoryRequest.getDefaultInstance()))
-              .setResponseMarshaller(io.grpc.protobuf.ProtoUtils.marshaller(
-                  pt.tecnico.BFTB.bank.grpc.BankReadTransactionHistoryResponse.getDefaultInstance()))
-              .setSchemaDescriptor(new BankServiceMethodDescriptorSupplier("readTransactionHistory"))
-              .build();
-        }
-      }
-    }
-    return getReadTransactionHistoryMethod;
-  }
-
-  private static volatile io.grpc.MethodDescriptor<pt.tecnico.BFTB.bank.grpc.BankWriteBalanceRequest,
-      pt.tecnico.BFTB.bank.grpc.BankWriteBalanceResponse> getWriteBalanceMethod;
-
-  @io.grpc.stub.annotations.RpcMethod(
-      fullMethodName = SERVICE_NAME + '/' + "writeBalance",
-      requestType = pt.tecnico.BFTB.bank.grpc.BankWriteBalanceRequest.class,
-      responseType = pt.tecnico.BFTB.bank.grpc.BankWriteBalanceResponse.class,
-      methodType = io.grpc.MethodDescriptor.MethodType.UNARY)
-  public static io.grpc.MethodDescriptor<pt.tecnico.BFTB.bank.grpc.BankWriteBalanceRequest,
-      pt.tecnico.BFTB.bank.grpc.BankWriteBalanceResponse> getWriteBalanceMethod() {
-    io.grpc.MethodDescriptor<pt.tecnico.BFTB.bank.grpc.BankWriteBalanceRequest, pt.tecnico.BFTB.bank.grpc.BankWriteBalanceResponse> getWriteBalanceMethod;
-    if ((getWriteBalanceMethod = BankServiceGrpc.getWriteBalanceMethod) == null) {
-      synchronized (BankServiceGrpc.class) {
-        if ((getWriteBalanceMethod = BankServiceGrpc.getWriteBalanceMethod) == null) {
-          BankServiceGrpc.getWriteBalanceMethod = getWriteBalanceMethod =
-              io.grpc.MethodDescriptor.<pt.tecnico.BFTB.bank.grpc.BankWriteBalanceRequest, pt.tecnico.BFTB.bank.grpc.BankWriteBalanceResponse>newBuilder()
-              .setType(io.grpc.MethodDescriptor.MethodType.UNARY)
-              .setFullMethodName(generateFullMethodName(SERVICE_NAME, "writeBalance"))
-              .setSampledToLocalTracing(true)
-              .setRequestMarshaller(io.grpc.protobuf.ProtoUtils.marshaller(
-                  pt.tecnico.BFTB.bank.grpc.BankWriteBalanceRequest.getDefaultInstance()))
-              .setResponseMarshaller(io.grpc.protobuf.ProtoUtils.marshaller(
-                  pt.tecnico.BFTB.bank.grpc.BankWriteBalanceResponse.getDefaultInstance()))
-              .setSchemaDescriptor(new BankServiceMethodDescriptorSupplier("writeBalance"))
-              .build();
-        }
-      }
-    }
-    return getWriteBalanceMethod;
-  }
-
-  private static volatile io.grpc.MethodDescriptor<pt.tecnico.BFTB.bank.grpc.BankWriteTransactionHistoryRequest,
-      pt.tecnico.BFTB.bank.grpc.BankWriteTransactionHistoryResponse> getWriteTransactionHistoryMethod;
-
-  @io.grpc.stub.annotations.RpcMethod(
-      fullMethodName = SERVICE_NAME + '/' + "writeTransactionHistory",
-      requestType = pt.tecnico.BFTB.bank.grpc.BankWriteTransactionHistoryRequest.class,
-      responseType = pt.tecnico.BFTB.bank.grpc.BankWriteTransactionHistoryResponse.class,
-      methodType = io.grpc.MethodDescriptor.MethodType.UNARY)
-  public static io.grpc.MethodDescriptor<pt.tecnico.BFTB.bank.grpc.BankWriteTransactionHistoryRequest,
-      pt.tecnico.BFTB.bank.grpc.BankWriteTransactionHistoryResponse> getWriteTransactionHistoryMethod() {
-    io.grpc.MethodDescriptor<pt.tecnico.BFTB.bank.grpc.BankWriteTransactionHistoryRequest, pt.tecnico.BFTB.bank.grpc.BankWriteTransactionHistoryResponse> getWriteTransactionHistoryMethod;
-    if ((getWriteTransactionHistoryMethod = BankServiceGrpc.getWriteTransactionHistoryMethod) == null) {
-      synchronized (BankServiceGrpc.class) {
-        if ((getWriteTransactionHistoryMethod = BankServiceGrpc.getWriteTransactionHistoryMethod) == null) {
-          BankServiceGrpc.getWriteTransactionHistoryMethod = getWriteTransactionHistoryMethod =
-              io.grpc.MethodDescriptor.<pt.tecnico.BFTB.bank.grpc.BankWriteTransactionHistoryRequest, pt.tecnico.BFTB.bank.grpc.BankWriteTransactionHistoryResponse>newBuilder()
-              .setType(io.grpc.MethodDescriptor.MethodType.UNARY)
-              .setFullMethodName(generateFullMethodName(SERVICE_NAME, "writeTransactionHistory"))
-              .setSampledToLocalTracing(true)
-              .setRequestMarshaller(io.grpc.protobuf.ProtoUtils.marshaller(
-                  pt.tecnico.BFTB.bank.grpc.BankWriteTransactionHistoryRequest.getDefaultInstance()))
-              .setResponseMarshaller(io.grpc.protobuf.ProtoUtils.marshaller(
-                  pt.tecnico.BFTB.bank.grpc.BankWriteTransactionHistoryResponse.getDefaultInstance()))
-              .setSchemaDescriptor(new BankServiceMethodDescriptorSupplier("writeTransactionHistory"))
-              .build();
-        }
-      }
-    }
-    return getWriteTransactionHistoryMethod;
-  }
-
   /**
    * Creates a new async stub that supports all call types for the service
    */
@@ -376,34 +252,6 @@ public final class BankServiceGrpc {
       io.grpc.stub.ServerCalls.asyncUnimplementedUnaryCall(getAuditMethod(), responseObserver);
     }
 
-    /**
-     */
-    public void readBalance(pt.tecnico.BFTB.bank.grpc.BankReadBalanceRequest request,
-        io.grpc.stub.StreamObserver<pt.tecnico.BFTB.bank.grpc.BankReadBalanceResponse> responseObserver) {
-      io.grpc.stub.ServerCalls.asyncUnimplementedUnaryCall(getReadBalanceMethod(), responseObserver);
-    }
-
-    /**
-     */
-    public void readTransactionHistory(pt.tecnico.BFTB.bank.grpc.BankReadTransactionHistoryRequest request,
-        io.grpc.stub.StreamObserver<pt.tecnico.BFTB.bank.grpc.BankReadTransactionHistoryResponse> responseObserver) {
-      io.grpc.stub.ServerCalls.asyncUnimplementedUnaryCall(getReadTransactionHistoryMethod(), responseObserver);
-    }
-
-    /**
-     */
-    public void writeBalance(pt.tecnico.BFTB.bank.grpc.BankWriteBalanceRequest request,
-        io.grpc.stub.StreamObserver<pt.tecnico.BFTB.bank.grpc.BankWriteBalanceResponse> responseObserver) {
-      io.grpc.stub.ServerCalls.asyncUnimplementedUnaryCall(getWriteBalanceMethod(), responseObserver);
-    }
-
-    /**
-     */
-    public void writeTransactionHistory(pt.tecnico.BFTB.bank.grpc.BankWriteTransactionHistoryRequest request,
-        io.grpc.stub.StreamObserver<pt.tecnico.BFTB.bank.grpc.BankWriteTransactionHistoryResponse> responseObserver) {
-      io.grpc.stub.ServerCalls.asyncUnimplementedUnaryCall(getWriteTransactionHistoryMethod(), responseObserver);
-    }
-
     @java.lang.Override public final io.grpc.ServerServiceDefinition bindService() {
       return io.grpc.ServerServiceDefinition.builder(getServiceDescriptor())
           .addMethod(
@@ -441,34 +289,6 @@ public final class BankServiceGrpc {
                 pt.tecnico.BFTB.bank.grpc.auditRequest,
                 pt.tecnico.BFTB.bank.grpc.auditResponse>(
                   this, METHODID_AUDIT)))
-          .addMethod(
-            getReadBalanceMethod(),
-            io.grpc.stub.ServerCalls.asyncUnaryCall(
-              new MethodHandlers<
-                pt.tecnico.BFTB.bank.grpc.BankReadBalanceRequest,
-                pt.tecnico.BFTB.bank.grpc.BankReadBalanceResponse>(
-                  this, METHODID_READ_BALANCE)))
-          .addMethod(
-            getReadTransactionHistoryMethod(),
-            io.grpc.stub.ServerCalls.asyncUnaryCall(
-              new MethodHandlers<
-                pt.tecnico.BFTB.bank.grpc.BankReadTransactionHistoryRequest,
-                pt.tecnico.BFTB.bank.grpc.BankReadTransactionHistoryResponse>(
-                  this, METHODID_READ_TRANSACTION_HISTORY)))
-          .addMethod(
-            getWriteBalanceMethod(),
-            io.grpc.stub.ServerCalls.asyncUnaryCall(
-              new MethodHandlers<
-                pt.tecnico.BFTB.bank.grpc.BankWriteBalanceRequest,
-                pt.tecnico.BFTB.bank.grpc.BankWriteBalanceResponse>(
-                  this, METHODID_WRITE_BALANCE)))
-          .addMethod(
-            getWriteTransactionHistoryMethod(),
-            io.grpc.stub.ServerCalls.asyncUnaryCall(
-              new MethodHandlers<
-                pt.tecnico.BFTB.bank.grpc.BankWriteTransactionHistoryRequest,
-                pt.tecnico.BFTB.bank.grpc.BankWriteTransactionHistoryResponse>(
-                  this, METHODID_WRITE_TRANSACTION_HISTORY)))
           .build();
     }
   }
@@ -526,38 +346,6 @@ public final class BankServiceGrpc {
       io.grpc.stub.ClientCalls.asyncUnaryCall(
           getChannel().newCall(getAuditMethod(), getCallOptions()), request, responseObserver);
     }
-
-    /**
-     */
-    public void readBalance(pt.tecnico.BFTB.bank.grpc.BankReadBalanceRequest request,
-        io.grpc.stub.StreamObserver<pt.tecnico.BFTB.bank.grpc.BankReadBalanceResponse> responseObserver) {
-      io.grpc.stub.ClientCalls.asyncUnaryCall(
-          getChannel().newCall(getReadBalanceMethod(), getCallOptions()), request, responseObserver);
-    }
-
-    /**
-     */
-    public void readTransactionHistory(pt.tecnico.BFTB.bank.grpc.BankReadTransactionHistoryRequest request,
-        io.grpc.stub.StreamObserver<pt.tecnico.BFTB.bank.grpc.BankReadTransactionHistoryResponse> responseObserver) {
-      io.grpc.stub.ClientCalls.asyncUnaryCall(
-          getChannel().newCall(getReadTransactionHistoryMethod(), getCallOptions()), request, responseObserver);
-    }
-
-    /**
-     */
-    public void writeBalance(pt.tecnico.BFTB.bank.grpc.BankWriteBalanceRequest request,
-        io.grpc.stub.StreamObserver<pt.tecnico.BFTB.bank.grpc.BankWriteBalanceResponse> responseObserver) {
-      io.grpc.stub.ClientCalls.asyncUnaryCall(
-          getChannel().newCall(getWriteBalanceMethod(), getCallOptions()), request, responseObserver);
-    }
-
-    /**
-     */
-    public void writeTransactionHistory(pt.tecnico.BFTB.bank.grpc.BankWriteTransactionHistoryRequest request,
-        io.grpc.stub.StreamObserver<pt.tecnico.BFTB.bank.grpc.BankWriteTransactionHistoryResponse> responseObserver) {
-      io.grpc.stub.ClientCalls.asyncUnaryCall(
-          getChannel().newCall(getWriteTransactionHistoryMethod(), getCallOptions()), request, responseObserver);
-    }
   }
 
   /**
@@ -607,34 +395,6 @@ public final class BankServiceGrpc {
     public pt.tecnico.BFTB.bank.grpc.auditResponse audit(pt.tecnico.BFTB.bank.grpc.auditRequest request) {
       return io.grpc.stub.ClientCalls.blockingUnaryCall(
           getChannel(), getAuditMethod(), getCallOptions(), request);
-    }
-
-    /**
-     */
-    public pt.tecnico.BFTB.bank.grpc.BankReadBalanceResponse readBalance(pt.tecnico.BFTB.bank.grpc.BankReadBalanceRequest request) {
-      return io.grpc.stub.ClientCalls.blockingUnaryCall(
-          getChannel(), getReadBalanceMethod(), getCallOptions(), request);
-    }
-
-    /**
-     */
-    public pt.tecnico.BFTB.bank.grpc.BankReadTransactionHistoryResponse readTransactionHistory(pt.tecnico.BFTB.bank.grpc.BankReadTransactionHistoryRequest request) {
-      return io.grpc.stub.ClientCalls.blockingUnaryCall(
-          getChannel(), getReadTransactionHistoryMethod(), getCallOptions(), request);
-    }
-
-    /**
-     */
-    public pt.tecnico.BFTB.bank.grpc.BankWriteBalanceResponse writeBalance(pt.tecnico.BFTB.bank.grpc.BankWriteBalanceRequest request) {
-      return io.grpc.stub.ClientCalls.blockingUnaryCall(
-          getChannel(), getWriteBalanceMethod(), getCallOptions(), request);
-    }
-
-    /**
-     */
-    public pt.tecnico.BFTB.bank.grpc.BankWriteTransactionHistoryResponse writeTransactionHistory(pt.tecnico.BFTB.bank.grpc.BankWriteTransactionHistoryRequest request) {
-      return io.grpc.stub.ClientCalls.blockingUnaryCall(
-          getChannel(), getWriteTransactionHistoryMethod(), getCallOptions(), request);
     }
   }
 
@@ -691,38 +451,6 @@ public final class BankServiceGrpc {
       return io.grpc.stub.ClientCalls.futureUnaryCall(
           getChannel().newCall(getAuditMethod(), getCallOptions()), request);
     }
-
-    /**
-     */
-    public com.google.common.util.concurrent.ListenableFuture<pt.tecnico.BFTB.bank.grpc.BankReadBalanceResponse> readBalance(
-        pt.tecnico.BFTB.bank.grpc.BankReadBalanceRequest request) {
-      return io.grpc.stub.ClientCalls.futureUnaryCall(
-          getChannel().newCall(getReadBalanceMethod(), getCallOptions()), request);
-    }
-
-    /**
-     */
-    public com.google.common.util.concurrent.ListenableFuture<pt.tecnico.BFTB.bank.grpc.BankReadTransactionHistoryResponse> readTransactionHistory(
-        pt.tecnico.BFTB.bank.grpc.BankReadTransactionHistoryRequest request) {
-      return io.grpc.stub.ClientCalls.futureUnaryCall(
-          getChannel().newCall(getReadTransactionHistoryMethod(), getCallOptions()), request);
-    }
-
-    /**
-     */
-    public com.google.common.util.concurrent.ListenableFuture<pt.tecnico.BFTB.bank.grpc.BankWriteBalanceResponse> writeBalance(
-        pt.tecnico.BFTB.bank.grpc.BankWriteBalanceRequest request) {
-      return io.grpc.stub.ClientCalls.futureUnaryCall(
-          getChannel().newCall(getWriteBalanceMethod(), getCallOptions()), request);
-    }
-
-    /**
-     */
-    public com.google.common.util.concurrent.ListenableFuture<pt.tecnico.BFTB.bank.grpc.BankWriteTransactionHistoryResponse> writeTransactionHistory(
-        pt.tecnico.BFTB.bank.grpc.BankWriteTransactionHistoryRequest request) {
-      return io.grpc.stub.ClientCalls.futureUnaryCall(
-          getChannel().newCall(getWriteTransactionHistoryMethod(), getCallOptions()), request);
-    }
   }
 
   private static final int METHODID_OPEN_ACCOUNT = 0;
@@ -730,10 +458,6 @@ public final class BankServiceGrpc {
   private static final int METHODID_CHECK_ACCOUNT = 2;
   private static final int METHODID_RECEIVE_AMOUNT = 3;
   private static final int METHODID_AUDIT = 4;
-  private static final int METHODID_READ_BALANCE = 5;
-  private static final int METHODID_READ_TRANSACTION_HISTORY = 6;
-  private static final int METHODID_WRITE_BALANCE = 7;
-  private static final int METHODID_WRITE_TRANSACTION_HISTORY = 8;
 
   private static final class MethodHandlers<Req, Resp> implements
       io.grpc.stub.ServerCalls.UnaryMethod<Req, Resp>,
@@ -771,22 +495,6 @@ public final class BankServiceGrpc {
         case METHODID_AUDIT:
           serviceImpl.audit((pt.tecnico.BFTB.bank.grpc.auditRequest) request,
               (io.grpc.stub.StreamObserver<pt.tecnico.BFTB.bank.grpc.auditResponse>) responseObserver);
-          break;
-        case METHODID_READ_BALANCE:
-          serviceImpl.readBalance((pt.tecnico.BFTB.bank.grpc.BankReadBalanceRequest) request,
-              (io.grpc.stub.StreamObserver<pt.tecnico.BFTB.bank.grpc.BankReadBalanceResponse>) responseObserver);
-          break;
-        case METHODID_READ_TRANSACTION_HISTORY:
-          serviceImpl.readTransactionHistory((pt.tecnico.BFTB.bank.grpc.BankReadTransactionHistoryRequest) request,
-              (io.grpc.stub.StreamObserver<pt.tecnico.BFTB.bank.grpc.BankReadTransactionHistoryResponse>) responseObserver);
-          break;
-        case METHODID_WRITE_BALANCE:
-          serviceImpl.writeBalance((pt.tecnico.BFTB.bank.grpc.BankWriteBalanceRequest) request,
-              (io.grpc.stub.StreamObserver<pt.tecnico.BFTB.bank.grpc.BankWriteBalanceResponse>) responseObserver);
-          break;
-        case METHODID_WRITE_TRANSACTION_HISTORY:
-          serviceImpl.writeTransactionHistory((pt.tecnico.BFTB.bank.grpc.BankWriteTransactionHistoryRequest) request,
-              (io.grpc.stub.StreamObserver<pt.tecnico.BFTB.bank.grpc.BankWriteTransactionHistoryResponse>) responseObserver);
           break;
         default:
           throw new AssertionError();
@@ -854,10 +562,6 @@ public final class BankServiceGrpc {
               .addMethod(getCheckAccountMethod())
               .addMethod(getReceiveAmountMethod())
               .addMethod(getAuditMethod())
-              .addMethod(getReadBalanceMethod())
-              .addMethod(getReadTransactionHistoryMethod())
-              .addMethod(getWriteBalanceMethod())
-              .addMethod(getWriteTransactionHistoryMethod())
               .build();
         }
       }

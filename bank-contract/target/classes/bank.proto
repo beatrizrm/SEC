@@ -8,44 +8,6 @@ package pt.tecnico.BFTB.bank.grpc;
 // rather than inside an outer class named after the .proto file.
 option java_multiple_files = true;
 
-message BankReadBalanceRequest {
-  string key = 1;
-}
-
-message BankReadBalanceResponse {
-  string balance = 1;
-}
-
-message BankWriteBalanceRequest {
-  string key = 1;
-  string amount = 2;
-}
-
-message BankWriteBalanceResponse {
-  string status = 1;
-}
-
-message BankReadTransactionHistoryRequest {
-  string key = 1;
-  int32 status = 2;
-}
-
-message BankReadTransactionHistoryResponse {
-  string transactionsHistory = 1;
-}
-
-message BankWriteTransactionHistoryRequest {
-  string key = 1;
-  string transactionAmount = 2;
-  string flag = 3;
-}
-
-message BankWriteTransactionHistoryResponse {
-  string status = 1;
-}
-
-// --------------------------------------------------------------------
-
 message openAccountRequest {
   string key = 1;
 }
@@ -96,9 +58,4 @@ service BankService {
   rpc checkAccount(checkAccountRequest) returns (checkAccountResponse);
   rpc receiveAmount(receiveAmountRequest) returns (receiveAmountResponse);
   rpc audit(auditRequest) returns (auditResponse);
-  //
-  rpc readBalance(BankReadBalanceRequest) returns (BankReadBalanceResponse);
-  rpc readTransactionHistory(BankReadTransactionHistoryRequest) returns (BankReadTransactionHistoryResponse);
-  rpc writeBalance(BankWriteBalanceRequest) returns (BankWriteBalanceResponse);
-  rpc writeTransactionHistory(BankWriteTransactionHistoryRequest) returns (BankWriteTransactionHistoryResponse);
 }
