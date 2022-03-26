@@ -1,13 +1,17 @@
 package pt.tecnico.BFTB.client.crypto;
 
-import java.security.KeyFactory;
-import java.security.KeyPair;
-import java.security.KeyPairGenerator;
-import java.security.PublicKey;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.security.*;
+import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.X509EncodedKeySpec;
 import java.util.Base64;
 
 public class CryptoHelper {
+
+    public static final String pki_path = "C:\\Users\\tomas\\IdeaProjects\\SEC_22\\keys\\pki";
+    public static final String private_path = "C:\\Users\\tomas\\IdeaProjects\\SEC_22\\keys\\private";
 
     public static KeyPair generate_RSA_keyPair(){
         try  {
@@ -18,6 +22,60 @@ public class CryptoHelper {
             e.printStackTrace();
             return null;
         }
+    }
+
+    public static PublicKey readRSAPublicKey(String publicKeyPath) {
+        try {
+            byte[] encoded = readFile(publicKeyPath);
+            X509EncodedKeySpec keySpec = new X509EncodedKeySpec(encoded);
+            KeyFactory kf = KeyFactory.getInstance("RSA");
+            return kf.generatePublic(keySpec);
+        } catch (Exception e){
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    public static PrivateKey readRSAPrivateKey(String privateKeyPath) {
+        try {
+            byte[] encoded = readFile(privateKeyPath);
+            PKCS8EncodedKeySpec keySpec = new PKCS8EncodedKeySpec(encoded);
+            KeyFactory kf = KeyFactory.getInstance("RSA");
+            return kf.generatePrivate(keySpec);
+        } catch (Exception e){
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    public static void SaveKeyPair(String user, KeyPair keyPair) throws IOException {
+
+
+        PrivateKey privateKey = keyPair.getPrivate();
+        PublicKey publicKey = keyPair.getPublic();
+
+        // Store Public Key.
+        X509EncodedKeySpec x509EncodedKeySpec = new X509EncodedKeySpec(
+                publicKey.getEncoded());
+        FileOutputStream fos = new FileOutputStream(pki_path + "/" +  user + ".pub");
+        fos.write(x509EncodedKeySpec.getEncoded());
+        fos.close();
+
+        // Store Private Key.
+        PKCS8EncodedKeySpec pkcs8EncodedKeySpec = new PKCS8EncodedKeySpec(
+                privateKey.getEncoded());
+        fos = new FileOutputStream(private_path + "/" + user + ".priv");
+        fos.write(pkcs8EncodedKeySpec.getEncoded());
+        fos.close();
+
+    }
+
+    private static byte[] readFile(String path) throws IOException {
+        FileInputStream fis = new FileInputStream(path);
+        byte[] content = new byte[fis.available()];
+        fis.read(content);
+        fis.close();
+        return content;
     }
 
     public static String encodeToBase64(byte[] data){
@@ -36,6 +94,38 @@ public class CryptoHelper {
             return null;
         }
     }
+
+    public static byte[] signMessage(PrivateKey privKey,byte[] messageToSign) {
+        try {
+            Signature sig = Signature.getInstance("SHA256withRSA");
+            sig.initSign(privKey);
+            sig.update(messageToSign);
+            byte[] signatureBytes = sig.sign();
+
+            return signatureBytes;
+        }catch (Exception e){
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    public static boolean verifySignature(byte[] msg, String signature_base64, PublicKey publicKey){
+        try {
+            Signature publicSignature = Signature.getInstance("SHA256withRSA");
+            publicSignature.initVerify(publicKey);
+            publicSignature.update(msg);
+
+            byte[] signatureBytes = Base64.getDecoder().decode(signature_base64);
+
+            return publicSignature.verify(signatureBytes);
+        } catch (Exception e){
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+
+
 
 
 

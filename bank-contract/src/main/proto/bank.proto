@@ -51,7 +51,7 @@ message sendAmountContent {
 
 message sendAmountRequest {
   sendAmountContent message = 1;
-  bytes signature = 2;
+  string signature = 2;
 }
 
 message sendAmountResponse {

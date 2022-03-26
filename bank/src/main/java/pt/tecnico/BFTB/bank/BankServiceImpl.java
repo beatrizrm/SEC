@@ -1,10 +1,14 @@
 package pt.tecnico.BFTB.bank;
 
+import com.google.protobuf.ByteString;
 import io.grpc.stub.StreamObserver;
 
+import pt.tecnico.BFTB.bank.crypto.CryptoHelper;
 import pt.tecnico.BFTB.bank.grpc.*;
 import pt.tecnico.BFTB.bank.pojos.Transaction;
 
+import java.io.IOException;
+import java.security.PublicKey;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
@@ -16,12 +20,13 @@ public class BankServiceImpl extends BankServiceGrpc.BankServiceImplBase{
     private  BankManager bankAccounts;
     private int transactionId;
 
-    public BankServiceImpl() {
+    public BankServiceImpl() throws IOException {
         this.bankAccounts = new BankManager();
     }
 
     @Override
     public void openAccount(openAccountRequest request, StreamObserver<openAccountResponse> responseObserver) {
+
         String key = request.getKey();
         String user = request.getUser();
 
@@ -40,18 +45,29 @@ public class BankServiceImpl extends BankServiceGrpc.BankServiceImplBase{
 
     @Override
     public void sendAmount(sendAmountRequest request, StreamObserver<sendAmountResponse> responseObserver) {
-        String sourceKey = request.getSourceKey();
-        String destinationKey = request.getDestinationKey();
-        String amount = request.getAmount();
+
+        //get message and verify signature
+        sendAmountContent msg = request.getMessage();
+        PublicKey key_source = CryptoHelper.publicKeyFromBase64(msg.getSource());
+        PublicKey key_destiny = CryptoHelper.readRSAPublicKey(msg.getDestination());
+
+        if (!CryptoHelper.verifySignature(msg.toByteArray(),request.getSignature(),key_source)) {
+            responseObserver.onError(
+                    INVALID_ARGUMENT.withDescription("sendAmount: Signature not verified").asRuntimeException());
+            responseObserver.onCompleted();
+        }
+
+        String key_destination = msg.getDestination();
+        String amount = msg.getAmount();
         String timeStamp = new SimpleDateFormat("yyyy.MM.dd.HH.mm.ss").format(new Date());
 
-        if (sourceKey == null || sourceKey.isBlank()) {
+        if (key_source == null) {
             responseObserver.onError(
                     INVALID_ARGUMENT.withDescription("sendAmount: Source Key cannot be empty!").asRuntimeException());
             responseObserver.onCompleted();
         }
 
-        if (destinationKey == null || destinationKey.isBlank()) {
+        if (key_destiny == null) {
             responseObserver.onError(
                     INVALID_ARGUMENT.withDescription("sendAmount: Destination Key cannot be empty!").asRuntimeException());
             responseObserver.onCompleted();
@@ -63,7 +79,7 @@ public class BankServiceImpl extends BankServiceGrpc.BankServiceImplBase{
             responseObserver.onCompleted();
         }
 
-        int status = bankAccounts.checkIfTransactionPossible(sourceKey, Integer.parseInt(amount));
+        int status = bankAccounts.checkIfTransactionPossible(key_source, Integer.parseInt(amount));
 
         Transaction transactionSend = new Transaction(transactionId, sourceKey, destinationKey,0, Integer.parseInt(amount), 0, timeStamp);
         Transaction transactionReceive = new Transaction(transactionId, sourceKey, destinationKey,1, Integer.parseInt(amount), 0, timeStamp);

@@ -2,24 +2,11 @@ package pt.tecnico.BFTB.client;
 
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
-import pt.tecnico.BFTB.bank.grpc.BankServiceGrpc;
+import pt.tecnico.BFTB.bank.grpc.*;
 import pt.tecnico.BFTB.bank.grpc.BankServiceGrpc.BankServiceBlockingStub;
-import pt.tecnico.BFTB.bank.grpc.openAccountRequest;
-import pt.tecnico.BFTB.bank.grpc.openAccountResponse;
-import pt.tecnico.BFTB.bank.grpc.sendAmountRequest;
-import pt.tecnico.BFTB.bank.grpc.sendAmountResponse;
-import pt.tecnico.BFTB.bank.grpc.checkAccountRequest;
-import pt.tecnico.BFTB.bank.grpc.checkAccountResponse;
-import pt.tecnico.BFTB.bank.grpc.receiveAmountRequest;
-import pt.tecnico.BFTB.bank.grpc.receiveAmountResponse;
-import pt.tecnico.BFTB.bank.grpc.auditRequest;
-import pt.tecnico.BFTB.bank.grpc.auditResponse;
 import pt.tecnico.BFTB.client.crypto.CryptoHelper;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
+import java.io.*;
 import java.security.KeyPair;
 import java.security.PublicKey;
 import java.util.Objects;
@@ -68,23 +55,23 @@ public class ClientServiceImpl {
     }
 
     // Sends a balance request and returns the balance
-    private int openAccountRequest(String _user) throws RuntimeException {
+    private int openAccountRequest(String _user) throws RuntimeException, IOException {
 
         //gera as chaves do cliente
         clientKeys = CryptoHelper.generate_RSA_keyPair();
         user = _user;
 
+        //guardar a chave publica num PKI e guardar a privada respetivamente
+        CryptoHelper.SaveKeyPair(user,clientKeys);
+
         //chave publica (passar para Base64)
         PublicKey client_pubkey = clientKeys.getPublic();
-
         String key = CryptoHelper.encodeToBase64(client_pubkey.getEncoded());
-        System.out.println(key);
-        //guardar a chave publica num PKI
-        //TO-DO
 
         openAccountRequest request = openAccountRequest.newBuilder().setKey(key).setUser(_user).build();
         openAccountResponse response = _stub.openAccount(request);
         return response.getStatus();
+
     }
 
     // Sends a balance request and returns the balance
@@ -110,13 +97,26 @@ public class ClientServiceImpl {
 
     // Sends an amount request and returns the balance
     private int sendAmountRequest(String amount, String source, String dest) throws RuntimeException {
+
         int amountInt = Integer.parseInt(amount);
         if (amountInt < 0)
             throw new RuntimeException("Invalid amount to send");
 
-        sendAmountRequest request = sendAmountRequest.newBuilder().setAmount(amount).setSourceKey(source).setDestinationKey(dest).build();
+        // get source and dest key
+        String source_key = CryptoHelper.encodeToBase64(clientKeys.getPublic().getEncoded());
+        PublicKey dst_key = CryptoHelper.readRSAPublicKey(CryptoHelper.pki_path + "/" + dest + ".pub");
+        String destiny_key = CryptoHelper.encodeToBase64(dst_key.getEncoded());
+
+        //create the msg and signature
+        sendAmountContent msg = sendAmountContent.newBuilder().setAmount(amount).setDestination(destiny_key).setSource(source_key).build();
+        String signature = CryptoHelper.encodeToBase64(CryptoHelper.signMessage(clientKeys.getPrivate(),msg.toByteArray()));
+
+
+        sendAmountRequest request = sendAmountRequest.newBuilder().setMessage(msg).setSignature(signature).build();
         sendAmountResponse response = _stub.sendAmount(request);
         return response.getStatus();
+
+
     }
 
     // Sends a terminates the service by closing the channel
@@ -179,7 +179,7 @@ public class ClientServiceImpl {
                     response = "Invalid command";
                     break;
             }
-        } catch (RuntimeException e) {
+        } catch (RuntimeException | IOException e) {
             response = "ERRO " + e.getMessage();
         }
         return response;
