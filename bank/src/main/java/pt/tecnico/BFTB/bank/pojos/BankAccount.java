@@ -1,16 +1,23 @@
 package pt.tecnico.BFTB.bank.pojos;
 
+import java.security.PublicKey;
 import java.util.ArrayList;
 import java.util.List;
 
 public class BankAccount {
 
     private int balance;
+    private String user;
+    private PublicKey pubKey;
     private List<Transaction> transactionsHistory;
 
-    public BankAccount(int balance) {
+    public BankAccount(String user,PublicKey pubKey, int balance) {
+
+        this.user = user;
+        this.pubKey = pubKey;
         this.balance = balance;
         this.transactionsHistory = new ArrayList<>();
+
     }
 
     public int getBalance() {

@@ -23,6 +23,7 @@ public class BankServiceImpl extends BankServiceGrpc.BankServiceImplBase{
     @Override
     public void openAccount(openAccountRequest request, StreamObserver<openAccountResponse> responseObserver) {
         String key = request.getKey();
+        String user = request.getUser();
 
         if (key == null || key.isBlank()) {
             responseObserver.onError(
@@ -30,7 +31,7 @@ public class BankServiceImpl extends BankServiceGrpc.BankServiceImplBase{
             responseObserver.onCompleted();
         }
 
-        int status = bankAccounts.openAccount(key);
+        int status = bankAccounts.openAccount(user,key);
 
         openAccountResponse response = openAccountResponse.newBuilder().setStatus(status).build();
         responseObserver.onNext(response);

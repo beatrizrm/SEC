@@ -1,8 +1,11 @@
 package pt.tecnico.BFTB.bank;
 
+import pt.tecnico.BFTB.bank.crypto.CryptoHelper;
 import pt.tecnico.BFTB.bank.pojos.BankAccount;
 import pt.tecnico.BFTB.bank.pojos.Transaction;
 
+import java.security.KeyPair;
+import java.security.PublicKey;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -10,9 +13,13 @@ import java.util.Map;
 public class BankManager {
 
     private Map<String, BankAccount> bankAccounts;
+    private KeyPair serverKeys;
 
     public BankManager() {
+
         this.bankAccounts = new HashMap<String, BankAccount>();
+        this.serverKeys = CryptoHelper.generate_RSA_keyPair();
+
     }
 
     /**
@@ -47,11 +54,17 @@ public class BankManager {
      * @param key
      * @return The value of the balance of the bankAccount with key {@code key}
      */
-    public synchronized int openAccount(String key) {
+    public synchronized int openAccount(String user, String key) {
         int status = 0;
+
+        //get Pubkey
+        CryptoHelper.decodeFromBase64(key);
+        PublicKey client_pubkey = CryptoHelper.publicKeyFromBase64(key);
+        System.out.println(key);
+
         if(bankAccounts.get(key) == null){
-            BankAccount bankAccount = new BankAccount(500);
-            bankAccounts.put(key, bankAccount);
+            BankAccount bankAccount = new BankAccount(user,client_pubkey,500);
+            bankAccounts.put(user, bankAccount);
             status = 1;
         }
         return status;

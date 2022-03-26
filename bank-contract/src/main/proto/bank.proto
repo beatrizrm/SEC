@@ -9,7 +9,8 @@ package pt.tecnico.BFTB.bank.grpc;
 option java_multiple_files = true;
 
 message openAccountRequest {
-  string key = 1;
+  string user = 1;
+  string key = 2;
 }
 
 message openAccountResponse {
@@ -42,10 +43,15 @@ message checkAccountResponse {
   string pendingTransactions = 2;
 }
 
-message sendAmountRequest {
-  string sourceKey = 1;
-  string destinationKey = 2;
+message sendAmountContent {
+  string source = 1;
+  string destination = 2;
   string amount = 3;
+}
+
+message sendAmountRequest {
+  sendAmountContent message = 1;
+  bytes signature = 2;
 }
 
 message sendAmountResponse {

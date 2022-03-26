@@ -14,11 +14,14 @@ import pt.tecnico.BFTB.bank.grpc.receiveAmountRequest;
 import pt.tecnico.BFTB.bank.grpc.receiveAmountResponse;
 import pt.tecnico.BFTB.bank.grpc.auditRequest;
 import pt.tecnico.BFTB.bank.grpc.auditResponse;
+import pt.tecnico.BFTB.client.crypto.CryptoHelper;
 
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
+import java.security.KeyPair;
+import java.security.PublicKey;
 import java.util.Objects;
 
 public class ClientServiceImpl {
@@ -27,11 +30,14 @@ public class ClientServiceImpl {
     private int _BankPort;
     private ManagedChannel _channel;
     private BankServiceBlockingStub _stub;
+    private KeyPair clientKeys;
+    private String user;
+
 
     // Initialize all inner variables and checks their correctness
     public ClientServiceImpl(String[] args) {
-        this.set_BankHost(args[0]);
-        this.set_BankPort(args[1]);
+        this.set_BankHost("localhost");
+        this.set_BankPort("8080");
         _channel = ManagedChannelBuilder.forAddress(_BankHost, _BankPort).usePlaintext().build();
         _stub = BankServiceGrpc.newBlockingStub(_channel);
     }
@@ -62,8 +68,21 @@ public class ClientServiceImpl {
     }
 
     // Sends a balance request and returns the balance
-    private int openAccountRequest(String _userKey) throws RuntimeException {
-        openAccountRequest request = openAccountRequest.newBuilder().setKey(_userKey).build();
+    private int openAccountRequest(String _user) throws RuntimeException {
+
+        //gera as chaves do cliente
+        clientKeys = CryptoHelper.generate_RSA_keyPair();
+        user = _user;
+
+        //chave publica (passar para Base64)
+        PublicKey client_pubkey = clientKeys.getPublic();
+
+        String key = CryptoHelper.encodeToBase64(client_pubkey.getEncoded());
+        System.out.println(key);
+        //guardar a chave publica num PKI
+        //TO-DO
+
+        openAccountRequest request = openAccountRequest.newBuilder().setKey(key).setUser(_user).build();
         openAccountResponse response = _stub.openAccount(request);
         return response.getStatus();
     }
