@@ -1,24 +1,23 @@
 package pt.tecnico.BFTB.bank;
 
+import pt.tecnico.BFTB.bank.exceptions.AccountAlreadyExistsException;
+import pt.tecnico.BFTB.bank.exceptions.AccountDoesntExistException;
+import pt.tecnico.BFTB.bank.exceptions.TransactionDoesntExistException;
 import pt.tecnico.BFTB.bank.crypto.CryptoHelper;
-import pt.tecnico.BFTB.bank.pojos.BankAccount;
 import pt.tecnico.BFTB.bank.pojos.Transaction;
 
 import java.io.IOException;
 import java.security.KeyPair;
 import java.security.PublicKey;
-import java.util.HashMap;
+import java.sql.SQLException;
 import java.util.List;
-import java.util.Map;
 
 public class BankManager {
 
-    private Map<PublicKey, BankAccount> bankAccounts;
     private KeyPair serverKeys;
 
     public BankManager() throws IOException {
 
-        this.bankAccounts = new HashMap<PublicKey, BankAccount>();
         this.serverKeys = CryptoHelper.generate_RSA_keyPair();
         CryptoHelper.SaveKeyPair("server",serverKeys);
 
@@ -30,10 +29,11 @@ public class BankManager {
      *
      * @param key
      * @return The value of the balance of the bankAccount with key {@code key}
+     * @throws SQLException
+     * @throws AccountDoesntExistException
      */
-    public synchronized int checkBalance(String key) {
-        BankAccount bankAccount = bankAccounts.get(key);
-        return bankAccount.getBalance();
+    public synchronized int checkBalance(BankData db, String key) throws SQLException, AccountDoesntExistException {
+        return db.getBalance(key);
     }
 
     /**
@@ -41,12 +41,13 @@ public class BankManager {
      *
      * @param key
      * @return The value of the balance of the bankAccount with key {@code key}
+     * @throws SQLException
+     * @throws AccountDoesntExistException
      */
-    public synchronized int checkIfTransactionPossible(PublicKey key, int amount) {
+    public synchronized int checkIfTransactionPossible(BankData db, PublicKey key, int amount) throws SQLException, AccountDoesntExistException {
         int status = 0;
-
-        BankAccount bankAccount = bankAccounts.get(key);
-        if(bankAccount.getBalance() > amount){
+        String keyB64 = CryptoHelper.encodeToBase64(key.getEncoded());
+        if (db.getBalance(keyB64) > amount) {
             status = 1;
         }
         return status;
@@ -57,22 +58,15 @@ public class BankManager {
      *
      * @param key
      * @return The value of the balance of the bankAccount with key {@code key}
+     * @throws SQLException
+     * @throws AccountAlreadyExistsException
      */
-    public synchronized int openAccount(String user, String key) {
-
-        int status = 0;
-
+    public synchronized void openAccount(BankData db, String user, String key) throws SQLException, AccountAlreadyExistsException {
         //get Pubkey
         CryptoHelper.decodeFromBase64(key);
         PublicKey client_pubkey = CryptoHelper.publicKeyFromBase64(key);
         System.out.println(key);
-
-        if(bankAccounts.get(key) == null){
-            BankAccount bankAccount = new BankAccount(user,client_pubkey,500);
-            bankAccounts.put(user, bankAccount);
-            status = 1;
-        }
-        return status;
+        db.createAccount(key, 500);
     }
 
     /**
@@ -80,10 +74,10 @@ public class BankManager {
      *
      * @param key
      * @return The value of the balance of the bankAccount with key {@code key}
+     * @throws SQLException
      */
-    public synchronized List<Transaction> checkTransactions(String key) {
-        BankAccount bankAccount = bankAccounts.get(key);
-        return bankAccount.getTransactionHistory();
+    public synchronized List<Transaction> checkTransactions(BankData db, String key) throws SQLException {
+        return db.getTransactionHistory(key);
     }
 
     /**
@@ -92,29 +86,19 @@ public class BankManager {
      * @param key
      * @param transactionId
      * @return The value of the balance of the bankAccount with key {@code key}
+     * @throws SQLException
+     * @throws TransactionDoesntExistException
+     * @throws AccountDoesntExistException
      */
-    public synchronized int receiveAmount(String key, String transactionId) {
+    public synchronized int receiveAmount(BankData db, String key, String transactionId) throws SQLException,
+            TransactionDoesntExistException, AccountDoesntExistException {
         int status = 0;
-        BankAccount destinationBankAccount = bankAccounts.get(key);
-        String sourceKey = "";
-        for(Transaction temp: destinationBankAccount.getTransactionHistory()){
-            if(temp.getId() == Integer.parseInt(transactionId)){
-                sourceKey = temp.getSource();
-                BankAccount sourceBankAccount = bankAccounts.get(sourceKey);
-                for(Transaction temp2: sourceBankAccount.getTransactionHistory()){
-                    if(temp2.getId() == Integer.parseInt(transactionId)){
-                        if(temp2.getAmount() < sourceBankAccount.getBalance()){
-                            status = 1;
-                            temp2.setStatus(1);
-                            sourceBankAccount.confirm_withdrawal(temp2.getAmount());
-                            break;
-                        }
-                    }
-                }
-                temp.setStatus(1);
-                destinationBankAccount.confirm_deposit(temp.getAmount());
-                break;
-            }
+        Transaction transaction = db.getTransactionDetails(Integer.parseInt(transactionId));
+        if (transaction.getAmount() < db.getBalance(transaction.getSource())) {
+            db.confirmTransaction(Integer.parseInt(transactionId));
+            db.confirmWithdrawal(transaction.getSource(), transaction.getAmount());
+            db.confirmDeposit(transaction.getDestination(), transaction.getAmount());
+            status = 1;
         }
         return status;
     }
@@ -124,11 +108,12 @@ public class BankManager {
      *
      * @param key
      * @param transaction
+     * @throws SQLException
      */
-    public synchronized void addTransactionHistory(String key, Transaction transaction) {
-        BankAccount bankAccount = bankAccounts.get(key);
-        bankAccount.addTransaction(transaction);
-
+    public synchronized void addTransactionHistory(BankData db, Transaction transaction) throws SQLException {
+        int transactionId = db.addTransaction(transaction); // check 0?
+        db.addTransactionToHistory(transaction.getSource(), transactionId, 0);
+        db.addTransactionToHistory(transaction.getDestination(), transactionId, 1);
     }
 
     /**
@@ -136,9 +121,10 @@ public class BankManager {
      *
      * @param key
      * @param amount
+     * @throws SQLException
+     * @throws AccountDoesntExistException
      */
-    public synchronized void addAmount(String key, String amount) {
-        BankAccount bankAccount = bankAccounts.get(key);
-        bankAccount.confirm_deposit(Integer.parseInt(amount));
+    public synchronized void addAmount(BankData db, String key, String amount) throws SQLException, AccountDoesntExistException {
+        db.confirmDeposit(key, Integer.parseInt(amount));
     }
 }
