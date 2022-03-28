@@ -111,6 +111,7 @@ public class CryptoHelper {
 
     public static boolean verifySignature(byte[] msg, String signature_base64, PublicKey publicKey){
         try {
+
             Signature publicSignature = Signature.getInstance("SHA256withRSA");
             publicSignature.initVerify(publicKey);
             publicSignature.update(msg);

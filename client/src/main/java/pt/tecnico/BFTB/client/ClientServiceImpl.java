@@ -83,9 +83,21 @@ public class ClientServiceImpl {
 
     // Sends a balance request and returns the balance
     private int receiveAmountRequest(String _userKey, String _transactionId) throws RuntimeException {
-        receiveAmountRequest request = receiveAmountRequest.newBuilder().setKey(_userKey).setTransactionId(_transactionId).build();
+
+        //get the pretend pubKey
+        PublicKey key = CryptoHelper.readRSAPublicKey(CryptoHelper.pki_path+"/" + _userKey + ".pub");
+        String key_string = CryptoHelper.encodeToBase64(key.getEncoded());
+
+        //construct the message
+        receiveAmountContent msg =  receiveAmountContent.newBuilder().setKey(key_string).setTransactionId(_transactionId).build();
+
+        //sign the message
+        String signature = CryptoHelper.encodeToBase64(CryptoHelper.signMessage(clientKeys.getPrivate(),msg.toByteArray()));
+
+        receiveAmountRequest request = receiveAmountRequest.newBuilder().setMsg(msg).setSignature(signature).build();
         receiveAmountResponse response = _stub.receiveAmount(request);
         return response.getStatus();
+
     }
 
     // Sends a balance request and returns the balance
@@ -111,9 +123,10 @@ public class ClientServiceImpl {
         sendAmountContent msg = sendAmountContent.newBuilder().setAmount(amount).setDestination(destiny_key).setSource(source_key).build();
         String signature = CryptoHelper.encodeToBase64(CryptoHelper.signMessage(clientKeys.getPrivate(),msg.toByteArray()));
 
-
+        //send the request for the server
         sendAmountRequest request = sendAmountRequest.newBuilder().setMessage(msg).setSignature(signature).build();
         sendAmountResponse response = _stub.sendAmount(request);
+
         return response.getStatus();
 
 

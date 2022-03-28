@@ -43,12 +43,14 @@ public class BankManager {
      * @return The value of the balance of the bankAccount with key {@code key}
      */
     public synchronized int checkIfTransactionPossible(PublicKey key, int amount) {
+
         int status = 0;
 
         BankAccount bankAccount = bankAccounts.get(key);
         if(bankAccount.getBalance() > amount){
             status = 1;
         }
+
         return status;
     }
 
@@ -69,7 +71,7 @@ public class BankManager {
 
         if(bankAccounts.get(key) == null){
             BankAccount bankAccount = new BankAccount(user,client_pubkey,500);
-            bankAccounts.put(user, bankAccount);
+            bankAccounts.put(client_pubkey, bankAccount);
             status = 1;
         }
         return status;
@@ -93,10 +95,11 @@ public class BankManager {
      * @param transactionId
      * @return The value of the balance of the bankAccount with key {@code key}
      */
-    public synchronized int receiveAmount(String key, String transactionId) {
+    public synchronized int receiveAmount(PublicKey key, String transactionId) {
+
         int status = 0;
         BankAccount destinationBankAccount = bankAccounts.get(key);
-        String sourceKey = "";
+        PublicKey sourceKey = null;
         for(Transaction temp: destinationBankAccount.getTransactionHistory()){
             if(temp.getId() == Integer.parseInt(transactionId)){
                 sourceKey = temp.getSource();
@@ -111,6 +114,7 @@ public class BankManager {
                         }
                     }
                 }
+
                 temp.setStatus(1);
                 destinationBankAccount.confirm_deposit(temp.getAmount());
                 break;
@@ -125,7 +129,7 @@ public class BankManager {
      * @param key
      * @param transaction
      */
-    public synchronized void addTransactionHistory(String key, Transaction transaction) {
+    public synchronized void addTransactionHistory(PublicKey key, Transaction transaction) {
         BankAccount bankAccount = bankAccounts.get(key);
         bankAccount.addTransaction(transaction);
 
@@ -137,7 +141,7 @@ public class BankManager {
      * @param key
      * @param amount
      */
-    public synchronized void addAmount(String key, String amount) {
+    public synchronized void addAmount(PublicKey key, String amount) {
         BankAccount bankAccount = bankAccounts.get(key);
         bankAccount.confirm_deposit(Integer.parseInt(amount));
     }

@@ -10,6 +10,9 @@ import java.util.Base64;
 
 public class CryptoHelper {
 
+    public static final String pki_path = "C:\\Users\\tomas\\IdeaProjects\\SEC_22\\keys\\pki";
+    public static final String private_path = "C:\\Users\\tomas\\IdeaProjects\\SEC_22\\keys\\private";
+
     public static KeyPair generate_RSA_keyPair(){
         try  {
             KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance("RSA");
@@ -45,23 +48,26 @@ public class CryptoHelper {
         }
     }
 
-    public static void SaveKeyPair(String path, KeyPair keyPair) throws IOException {
+    public static void SaveKeyPair(String user, KeyPair keyPair) throws IOException {
+
+
         PrivateKey privateKey = keyPair.getPrivate();
         PublicKey publicKey = keyPair.getPublic();
 
         // Store Public Key.
         X509EncodedKeySpec x509EncodedKeySpec = new X509EncodedKeySpec(
                 publicKey.getEncoded());
-        FileOutputStream fos = new FileOutputStream(path + "/public.key");
+        FileOutputStream fos = new FileOutputStream(pki_path + "/" +  user + ".pub");
         fos.write(x509EncodedKeySpec.getEncoded());
         fos.close();
 
         // Store Private Key.
         PKCS8EncodedKeySpec pkcs8EncodedKeySpec = new PKCS8EncodedKeySpec(
                 privateKey.getEncoded());
-        fos = new FileOutputStream(path + "/private.key");
+        fos = new FileOutputStream(private_path + "/" + user + ".priv");
         fos.write(pkcs8EncodedKeySpec.getEncoded());
         fos.close();
+
     }
 
     private static byte[] readFile(String path) throws IOException {

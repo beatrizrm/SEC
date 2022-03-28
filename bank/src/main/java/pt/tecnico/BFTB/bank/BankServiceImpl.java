@@ -49,8 +49,9 @@ public class BankServiceImpl extends BankServiceGrpc.BankServiceImplBase{
         //get message and verify signature
         sendAmountContent msg = request.getMessage();
         PublicKey key_source = CryptoHelper.publicKeyFromBase64(msg.getSource());
-        PublicKey key_destiny = CryptoHelper.readRSAPublicKey(msg.getDestination());
+        PublicKey key_destiny = CryptoHelper.publicKeyFromBase64(msg.getDestination());
 
+        //verify signature
         if (!CryptoHelper.verifySignature(msg.toByteArray(),request.getSignature(),key_source)) {
             responseObserver.onError(
                     INVALID_ARGUMENT.withDescription("sendAmount: Signature not verified").asRuntimeException());
@@ -81,16 +82,17 @@ public class BankServiceImpl extends BankServiceGrpc.BankServiceImplBase{
 
         int status = bankAccounts.checkIfTransactionPossible(key_source, Integer.parseInt(amount));
 
-        Transaction transactionSend = new Transaction(transactionId, sourceKey, destinationKey,0, Integer.parseInt(amount), 0, timeStamp);
-        Transaction transactionReceive = new Transaction(transactionId, sourceKey, destinationKey,1, Integer.parseInt(amount), 0, timeStamp);
+        Transaction transactionSend = new Transaction(transactionId, key_source, key_destiny,0, Integer.parseInt(amount), 0, timeStamp);
+        Transaction transactionReceive = new Transaction(transactionId, key_source, key_destiny,1, Integer.parseInt(amount), 0, timeStamp);
         transactionId++;
 
-        bankAccounts.addTransactionHistory(sourceKey, transactionSend);
-        bankAccounts.addTransactionHistory(destinationKey, transactionReceive);
+        bankAccounts.addTransactionHistory(key_source, transactionSend);
+        bankAccounts.addTransactionHistory(key_destiny, transactionReceive);
 
         sendAmountResponse response = sendAmountResponse.newBuilder().setStatus(status).build();
         responseObserver.onNext(response);
         responseObserver.onCompleted();
+
     }
 
     @Override
@@ -122,8 +124,18 @@ public class BankServiceImpl extends BankServiceGrpc.BankServiceImplBase{
 
     @Override
     public void receiveAmount(receiveAmountRequest request, StreamObserver<receiveAmountResponse> responseObserver) {
-        String key = request.getKey();
-        String transactionID = request.getTransactionId();
+
+        receiveAmountContent msg = request.getMsg();
+        String key = msg.getKey();
+        String signature = request.getSignature();
+        String transactionID = msg.getTransactionId();
+
+        //verify signature
+        if (!CryptoHelper.verifySignature(msg.toByteArray(),request.getSignature(),CryptoHelper.publicKeyFromBase64(key))) {
+            responseObserver.onError(
+                    INVALID_ARGUMENT.withDescription("sendAmount: Signature not verified").asRuntimeException());
+            responseObserver.onCompleted();
+        }
 
         if (key == null || key.isBlank()) {
             responseObserver.onError(
@@ -137,12 +149,15 @@ public class BankServiceImpl extends BankServiceGrpc.BankServiceImplBase{
             responseObserver.onCompleted();
         }
 
-        int status = bankAccounts.receiveAmount(key, transactionID);
+
+
+        int status = bankAccounts.receiveAmount(CryptoHelper.publicKeyFromBase64(key), transactionID);
 
 
         receiveAmountResponse response = receiveAmountResponse.newBuilder().setStatus(status).build();
         responseObserver.onNext(response);
         responseObserver.onCompleted();
+
     }
 
     @Override

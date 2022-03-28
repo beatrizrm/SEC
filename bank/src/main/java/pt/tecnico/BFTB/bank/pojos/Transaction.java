@@ -1,5 +1,6 @@
 package pt.tecnico.BFTB.bank.pojos;
 
+import java.security.PublicKey;
 import java.util.Date;
 
 public class Transaction {
@@ -7,9 +8,9 @@ public class Transaction {
     // id: transaction identifier
     private int id;
     // source: transaction source
-    private String source;
+    private PublicKey source;
     // destination: transaction destination
-    private String destination;
+    private PublicKey destination;
     // sign: 0 for '-' and 1 for '+'
     private int sign;
     // amount: money involved in the transaction
@@ -19,7 +20,7 @@ public class Transaction {
     // timeStamp guarantees freshness
     private String timeStamp;
 
-    public Transaction(int id, String source, String destination, int sign, int amount, int status, String timeStamp) {
+    public Transaction(int id, PublicKey source, PublicKey destination, int sign, int amount, int status, String timeStamp) {
         this.id = id;
         this.source = source;
         this.destination = destination;
@@ -37,19 +38,19 @@ public class Transaction {
         this.id = id;
     }
 
-    public String getSource() {
+    public PublicKey getSource() {
         return source;
     }
 
-    public void setSource(String source) {
+    public void setSource(PublicKey source) {
         this.source = source;
     }
 
-    public String getDestination() {
+    public PublicKey getDestination() {
         return destination;
     }
 
-    public void setDestination(String destination) {
+    public void setDestination(PublicKey destination) {
         this.destination = destination;
     }
 
