@@ -9,9 +9,11 @@ import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 
+import pt.tecnico.BFTB.bank.crypto.CryptoHelper;
 import pt.tecnico.BFTB.bank.exceptions.AccountAlreadyExistsException;
 import pt.tecnico.BFTB.bank.exceptions.AccountDoesntExistException;
 import pt.tecnico.BFTB.bank.exceptions.TransactionDoesntExistException;
+import pt.tecnico.BFTB.bank.pojos.BankAccount;
 import pt.tecnico.BFTB.bank.pojos.Transaction;
 
 public class BankData {
@@ -56,6 +58,34 @@ public class BankData {
             if (ps.executeUpdate() == 0) {
                 throw new AccountAlreadyExistsException(key);
             }
+        }
+    }
+
+    public BankAccount getAccountDetails(String key) throws SQLException, AccountDoesntExistException {
+        try (PreparedStatement ps = db.prepareStatement("SELECT * FROM account WHERE public_key = ?")) {
+            ps.setString(1, key);
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                return new BankAccount(
+                    rs.getString(1),    // FIXME user
+                    CryptoHelper.publicKeyFromBase64(rs.getString(1)),
+                    rs.getInt(2)
+                );
+            }
+            else {
+                throw new AccountDoesntExistException(key);
+            }
+        }
+    }
+
+    public boolean checkIfAccountExists(String key) throws SQLException {
+        try (PreparedStatement ps = db.prepareStatement("SELECT public_key FROM account WHERE public_key = ?")) {
+            ps.setString(1, key);
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                return true;
+            }
+            return false;
         }
     }
 

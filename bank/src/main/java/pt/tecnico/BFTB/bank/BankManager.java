@@ -2,7 +2,11 @@ package pt.tecnico.BFTB.bank;
 
 import pt.tecnico.BFTB.bank.exceptions.AccountAlreadyExistsException;
 import pt.tecnico.BFTB.bank.exceptions.AccountDoesntExistException;
+import pt.tecnico.BFTB.bank.exceptions.AccountPermissionException;
+import pt.tecnico.BFTB.bank.exceptions.InsufficientBalanceException;
+import pt.tecnico.BFTB.bank.exceptions.TransactionAlreadyCompletedException;
 import pt.tecnico.BFTB.bank.exceptions.TransactionDoesntExistException;
+import pt.tecnico.BFTB.bank.grpc.Bank;
 import pt.tecnico.BFTB.bank.crypto.CryptoHelper;
 import pt.tecnico.BFTB.bank.pojos.Transaction;
 
@@ -43,14 +47,20 @@ public class BankManager {
      * @return The value of the balance of the bankAccount with key {@code key}
      * @throws SQLException
      * @throws AccountDoesntExistException
+     * @throws InsufficientBalanceException
      */
-    public synchronized int checkIfTransactionPossible(BankData db, PublicKey key, int amount) throws SQLException, AccountDoesntExistException {
-        int status = 0;
-        String keyB64 = CryptoHelper.encodeToBase64(key.getEncoded());
-        if (db.getBalance(keyB64) > amount) {
-            status = 1;
+    public synchronized void checkIfTransactionPossible(BankData db, PublicKey source, PublicKey destination, int amount) throws SQLException, AccountDoesntExistException, InsufficientBalanceException {
+        String srcB64 = CryptoHelper.encodeToBase64(source.getEncoded());
+        String dstB64 = CryptoHelper.encodeToBase64(destination.getEncoded());
+        if (db.getBalance(srcB64) < amount) {
+            throw new InsufficientBalanceException(srcB64);
         }
-        return status;
+        if (!db.checkIfAccountExists(srcB64)) {
+            throw new AccountDoesntExistException(srcB64);
+        }
+        if (!db.checkIfAccountExists(dstB64)) {
+            throw new AccountDoesntExistException(dstB64);
+        }
     }
 
     /**
@@ -75,9 +85,37 @@ public class BankManager {
      * @param key
      * @return The value of the balance of the bankAccount with key {@code key}
      * @throws SQLException
+     * @throws AccountDoesntExistException
      */
-    public synchronized List<Transaction> checkTransactions(BankData db, String key) throws SQLException {
+    public synchronized List<Transaction> checkTransactions(BankData db, String key) throws SQLException, AccountDoesntExistException {
+        if (!db.checkIfAccountExists(key)) {
+            throw new AccountDoesntExistException(key);
+        }
         return db.getTransactionHistory(key);
+    }
+
+    /**
+     * Returns the value of the balance of the bankAccount mapped by {@code key}
+     *
+     * @param key
+     * @return The value of the balance of the bankAccount with key {@code key}
+     * @throws SQLException
+     * @throws AccountDoesntExistException
+     * @throws TransactionAlreadyCompletedException
+     * @throws AccountPermissionException
+     * @throws InsufficientBalanceException
+     */
+    public synchronized void checkIfCanReceive(BankData db, String key, Transaction transaction) throws SQLException, 
+            AccountDoesntExistException, TransactionAlreadyCompletedException, AccountPermissionException, InsufficientBalanceException {
+        if (transaction.getStatus() != 0) {
+            throw new TransactionAlreadyCompletedException(transaction.getId());
+        }
+        if (transaction.getDestination() != key) {
+            throw new AccountPermissionException("hi");
+        }
+        if (transaction.getAmount() > db.getBalance(transaction.getSource())) {
+            throw new InsufficientBalanceException();
+        }
     }
 
     /**
@@ -89,18 +127,18 @@ public class BankManager {
      * @throws SQLException
      * @throws TransactionDoesntExistException
      * @throws AccountDoesntExistException
+     * @throws InsufficientBalanceException
+     * @throws AccountPermissionException
+     * @throws TransactionAlreadyCompletedException
      */
     public synchronized int receiveAmount(BankData db, String key, String transactionId) throws SQLException,
-            TransactionDoesntExistException, AccountDoesntExistException {
-        int status = 0;
+            TransactionDoesntExistException, AccountDoesntExistException, TransactionAlreadyCompletedException, AccountPermissionException, InsufficientBalanceException {
         Transaction transaction = db.getTransactionDetails(Integer.parseInt(transactionId));
-        if (transaction.getAmount() < db.getBalance(transaction.getSource())) {
-            db.confirmTransaction(Integer.parseInt(transactionId));
-            db.confirmWithdrawal(transaction.getSource(), transaction.getAmount());
-            db.confirmDeposit(transaction.getDestination(), transaction.getAmount());
-            status = 1;
-        }
-        return status;
+        checkIfCanReceive(db, key, transaction);
+        db.confirmTransaction(Integer.parseInt(transactionId));
+        db.confirmWithdrawal(transaction.getSource(), transaction.getAmount());
+        db.confirmDeposit(transaction.getDestination(), transaction.getAmount());
+        return 1;
     }
 
     /**

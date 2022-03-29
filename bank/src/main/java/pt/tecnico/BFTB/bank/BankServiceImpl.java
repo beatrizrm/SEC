@@ -4,6 +4,9 @@ import com.google.protobuf.ByteString;
 import io.grpc.stub.StreamObserver;
 import pt.tecnico.BFTB.bank.exceptions.AccountAlreadyExistsException;
 import pt.tecnico.BFTB.bank.exceptions.AccountDoesntExistException;
+import pt.tecnico.BFTB.bank.exceptions.AccountPermissionException;
+import pt.tecnico.BFTB.bank.exceptions.InsufficientBalanceException;
+import pt.tecnico.BFTB.bank.exceptions.TransactionAlreadyCompletedException;
 import pt.tecnico.BFTB.bank.exceptions.TransactionDoesntExistException;
 import pt.tecnico.BFTB.bank.crypto.CryptoHelper;
 import pt.tecnico.BFTB.bank.grpc.*;
@@ -17,10 +20,12 @@ import java.util.Date;
 import java.util.List;
 
 import static io.grpc.Status.INVALID_ARGUMENT;
-import static io.grpc.Status.UNKNOWN;
+import static io.grpc.Status.FAILED_PRECONDITION;
 import static io.grpc.Status.ABORTED;
 import static io.grpc.Status.ALREADY_EXISTS;
 import static io.grpc.Status.NOT_FOUND;
+import static io.grpc.Status.UNKNOWN;
+import static io.grpc.Status.PERMISSION_DENIED;
 
 public class BankServiceImpl extends BankServiceGrpc.BankServiceImplBase{
     String dburl = "jdbc:postgresql:bank"; // FIXME
@@ -99,7 +104,7 @@ public class BankServiceImpl extends BankServiceGrpc.BankServiceImplBase{
 
         if (amount == null || amount.isBlank() || Integer.parseInt(amount) <= 0) {
             responseObserver.onError(
-                    INVALID_ARGUMENT.withDescription("sendAmount: Amount cannot be empty!").asRuntimeException());
+                    INVALID_ARGUMENT.withDescription("sendAmount: Amount cannot be empty and must be greater than 0!").asRuntimeException());
             return;
         }
 
@@ -108,14 +113,17 @@ public class BankServiceImpl extends BankServiceGrpc.BankServiceImplBase{
         try {
             db.connect(dburl, dbuser, dbpassword);
             db.beginTransaction();
-            status = bankAccounts.checkIfTransactionPossible(db, key_source, Integer.parseInt(amount));
-            if (status == 1) {
-                Transaction transaction = new Transaction(0, msg.getSource(), msg.getDestination(), 0, Integer.parseInt(amount), 0, timeStamp);
-                bankAccounts.addTransactionHistory(db, transaction);
-            }
+            bankAccounts.checkIfTransactionPossible(db, key_source, key_destiny, Integer.parseInt(amount));
+            Transaction transaction = new Transaction(0, msg.getSource(), msg.getDestination(), 0, Integer.parseInt(amount), 0, timeStamp);
+            bankAccounts.addTransactionHistory(db, transaction);
             db.commit();
         } catch (AccountDoesntExistException e) {
             responseObserver.onError(NOT_FOUND.withDescription("sendAmount: " + e.getMessage()).asRuntimeException());
+            db.rollback();
+            return;
+        } catch (InsufficientBalanceException e) {
+            responseObserver.onError(FAILED_PRECONDITION.withDescription("sendAmount: " + e.getMessage()).asRuntimeException());
+            db.rollback();
             return;
         } catch (SQLException e) {
             responseObserver.onError(ABORTED.withDescription("sendAmount: Error connecting to database.").asRuntimeException());
@@ -198,6 +206,15 @@ public class BankServiceImpl extends BankServiceGrpc.BankServiceImplBase{
             db.commit();
         } catch (AccountDoesntExistException | TransactionDoesntExistException e) {
             responseObserver.onError(NOT_FOUND.withDescription("receiveAmount: " + e.getMessage()).asRuntimeException());
+            db.rollback();
+            return;
+        } catch (TransactionAlreadyCompletedException | InsufficientBalanceException e) {
+            responseObserver.onError(FAILED_PRECONDITION.withDescription("receiveAmount: " + e.getMessage()).asRuntimeException());
+            db.rollback();
+            return;
+        } catch (AccountPermissionException e) {
+            responseObserver.onError(PERMISSION_DENIED.withDescription("receiveAmount: " + "User isn't the destinatary of the transaction").asRuntimeException());
+            db.rollback();
             return;
         } catch (SQLException e) {
             responseObserver.onError(ABORTED.withDescription("receiveAmount: Error connecting to database.").asRuntimeException());
@@ -229,6 +246,9 @@ public class BankServiceImpl extends BankServiceGrpc.BankServiceImplBase{
         try {
             db.connect(dburl, dbuser, dbpassword);
             transactions = bankAccounts.checkTransactions(db, key);
+        } catch (AccountDoesntExistException e) {
+            responseObserver.onError(NOT_FOUND.withDescription("audit: " + e.getMessage()).asRuntimeException());
+            return;
         } catch (SQLException e) {
             responseObserver.onError(UNKNOWN.withDescription("audit: Error connecting to database.").asRuntimeException());
             printError("audit", "DB error - " + e.getMessage());
