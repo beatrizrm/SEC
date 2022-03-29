@@ -130,7 +130,6 @@ public class BankData {
     }
 
     public int addTransaction(Transaction transaction) throws SQLException {
-        // FIXME check if both keys exist (possibly on other)
         try (PreparedStatement ps = db.prepareStatement("INSERT INTO transaction_info VALUES (DEFAULT, ?, ?, ?, ?, ?)", 
                 Statement.RETURN_GENERATED_KEYS)) {
             ps.setString(1, transaction.getSource());
@@ -188,10 +187,9 @@ public class BankData {
     }
 
     public List<Transaction> getTransactionHistory(String key) throws SQLException {
-        // FIXME check for nonexistant?
         try (PreparedStatement ps = db.prepareStatement("SELECT th.transaction_id, ti.source, ti.destination, "
                 + "th.sign, ti.amount, ti.status, ti.ts FROM transaction_history th JOIN transaction_info ti "
-                + "ON th.transaction_id = ti.transaction_id AND th.public_key = ?")) {    
+                + "ON th.transaction_id = ti.transaction_id AND th.public_key = ? ORDER BY th.transaction_id")) {    
             List<Transaction> transactions = new ArrayList<Transaction>();
             ps.setString(1, key);
             ResultSet rs = ps.executeQuery();

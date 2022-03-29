@@ -24,6 +24,9 @@
 
         <bank.host>localhost</bank.host>
         <bank.port>8080</bank.port>
+        <db.name>bank</db.name>
+        <db.user>sec</db.user>
+        <db.password>sec</db.password>
     </properties>
 
     <!-- Dependencies are code archives - JARs - on which your current module
@@ -148,8 +151,10 @@
                     <killAfter>-1</killAfter>
                     <mainClass>${mainclass}</mainClass>
                     <arguments>
-                        <!-- to put something here warning: -->
-                    </arguments>
+						<argument>${db.name}</argument>
+						<argument>${db.user}</argument>
+						<argument>${db.password}</argument>
+					</arguments>
                 </configuration>
             </plugin>
             <!-- The Application Assembler plug-in generates scripts for starting

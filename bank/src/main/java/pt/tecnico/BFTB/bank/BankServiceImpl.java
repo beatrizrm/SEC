@@ -28,13 +28,16 @@ import static io.grpc.Status.UNKNOWN;
 import static io.grpc.Status.PERMISSION_DENIED;
 
 public class BankServiceImpl extends BankServiceGrpc.BankServiceImplBase{
-    String dburl = "jdbc:postgresql:bank"; // FIXME
-    String dbuser = "sec";    // FIXME
-    String dbpassword ="sec"; // FIXME
+    String dbUrl;
+    String dbUser;
+    String dbPw;
 
     private  BankManager bankAccounts;
 
-    public BankServiceImpl() throws IOException {
+    public BankServiceImpl(String dbName, String dbUser, String dbPw) throws IOException {
+        this.dbUrl = "jdbc:postgresql:" + dbName;
+        this.dbUser = dbUser;
+        this.dbPw = dbPw;
         this.bankAccounts = new BankManager();
     }
 
@@ -53,7 +56,7 @@ public class BankServiceImpl extends BankServiceGrpc.BankServiceImplBase{
         BankData db = new BankData();
         int status = 0;
         try {
-            db.connect(dburl, dbuser, dbpassword);
+            db.connect(dbUrl, dbUser, dbPw);
             bankAccounts.openAccount(db, user, key);
             status = 1;
         } catch (AccountAlreadyExistsException e) {
@@ -111,7 +114,7 @@ public class BankServiceImpl extends BankServiceGrpc.BankServiceImplBase{
         BankData db = new BankData();
         int status = 0;
         try {
-            db.connect(dburl, dbuser, dbpassword);
+            db.connect(dbUrl, dbUser, dbPw);
             db.beginTransaction();
             bankAccounts.checkIfTransactionPossible(db, key_source, key_destiny, Integer.parseInt(amount));
             Transaction transaction = new Transaction(0, msg.getSource(), msg.getDestination(), 0, Integer.parseInt(amount), 0, timeStamp);
@@ -153,7 +156,7 @@ public class BankServiceImpl extends BankServiceGrpc.BankServiceImplBase{
         String balance = "";
         List<Transaction> transactionHistory = null;
         try {
-            db.connect(dburl, dbuser, dbpassword);
+            db.connect(dbUrl, dbUser, dbPw);
             balance = String.valueOf(bankAccounts.checkBalance(db, key));
             transactionHistory = bankAccounts.checkTransactions(db, key);
         } catch (AccountDoesntExistException e) {
@@ -200,7 +203,7 @@ public class BankServiceImpl extends BankServiceGrpc.BankServiceImplBase{
         BankData db = new BankData();
         int status = 0;
         try {
-            db.connect(dburl, dbuser, dbpassword);
+            db.connect(dbUrl, dbUser, dbPw);
             db.beginTransaction();
             status = bankAccounts.receiveAmount(db, key, transactionID);
             db.commit();
@@ -244,7 +247,7 @@ public class BankServiceImpl extends BankServiceGrpc.BankServiceImplBase{
         BankData db = new BankData();
         List<Transaction> transactions = null;
         try {
-            db.connect(dburl, dbuser, dbpassword);
+            db.connect(dbUrl, dbUser, dbPw);
             transactions = bankAccounts.checkTransactions(db, key);
         } catch (AccountDoesntExistException e) {
             responseObserver.onError(NOT_FOUND.withDescription("audit: " + e.getMessage()).asRuntimeException());
