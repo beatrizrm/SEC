@@ -21,6 +21,7 @@ public class BankManager {
         this.bankAccounts = new HashMap<PublicKey, BankAccount>();
         this.serverKeys = CryptoHelper.generate_RSA_keyPair();
         CryptoHelper.SaveKeyPair("server",serverKeys);
+        System.out.println(serverKeys.getPublic().toString());
 
     }
 
@@ -31,9 +32,11 @@ public class BankManager {
      * @param key
      * @return The value of the balance of the bankAccount with key {@code key}
      */
-    public synchronized int checkBalance(String key) {
+    public synchronized int checkBalance(PublicKey key) {
+
         BankAccount bankAccount = bankAccounts.get(key);
         return bankAccount.getBalance();
+
     }
 
     /**
@@ -83,7 +86,7 @@ public class BankManager {
      * @param key
      * @return The value of the balance of the bankAccount with key {@code key}
      */
-    public synchronized List<Transaction> checkTransactions(String key) {
+    public synchronized List<Transaction> checkTransactions(PublicKey key) {
         BankAccount bankAccount = bankAccounts.get(key);
         return bankAccount.getTransactionHistory();
     }

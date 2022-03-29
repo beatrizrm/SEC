@@ -8,13 +8,18 @@ package pt.tecnico.BFTB.bank.grpc;
 // rather than inside an outer class named after the .proto file.
 option java_multiple_files = true;
 
+message Status {
+  int32 status = 1;
+}
+
 message openAccountRequest {
   string user = 1;
   string key = 2;
 }
 
 message openAccountResponse {
-  int32 status = 1;
+  Status status = 1;
+  string signature = 2;
 }
 
 message auditRequest {
@@ -23,6 +28,7 @@ message auditRequest {
 
 message auditResponse {
   string transactionHistory = 1;
+  string signature = 2;
 }
 
 message receiveAmountContent {
@@ -35,17 +41,24 @@ message receiveAmountRequest {
   string signature = 2;
 }
 
+
 message receiveAmountResponse {
-  int32 status = 1;
+  Status status = 1;
+  string signature = 2;
 }
 
 message checkAccountRequest {
   string key = 1;
 }
 
-message checkAccountResponse {
+message checkAccountResMsg {
   string balance = 1;
   string pendingTransactions = 2;
+}
+
+message checkAccountResponse {
+  checkAccountResMsg msg_response = 1;
+  string signature = 2;
 }
 
 message sendAmountContent {
@@ -60,7 +73,8 @@ message sendAmountRequest {
 }
 
 message sendAmountResponse {
-  int32 status = 1;
+  Status status = 1;
+  string signature = 2;
 }
 
 service BankService {
