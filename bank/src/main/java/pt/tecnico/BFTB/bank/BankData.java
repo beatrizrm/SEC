@@ -51,10 +51,11 @@ public class BankData {
         }
     }
 
-    public void createAccount(String key, int balance) throws SQLException, AccountAlreadyExistsException {
-        try (PreparedStatement ps = db.prepareStatement("INSERT INTO account VALUES (?, ?) ON CONFLICT DO NOTHING")) {
+    public void createAccount(String key, String user, int balance) throws SQLException, AccountAlreadyExistsException {
+        try (PreparedStatement ps = db.prepareStatement("INSERT INTO account VALUES (?, ?, ?) ON CONFLICT DO NOTHING")) {
             ps.setString(1, key);
-            ps.setInt(2, balance);
+            ps.setString(2, user);
+            ps.setInt(3, balance);
             if (ps.executeUpdate() == 0) {
                 throw new AccountAlreadyExistsException(key);
             }
@@ -67,9 +68,9 @@ public class BankData {
             ResultSet rs = ps.executeQuery();
             if (rs.next()) {
                 return new BankAccount(
-                    rs.getString(1),    // FIXME user
-                    CryptoHelper.publicKeyFromBase64(rs.getString(1)),
-                    rs.getInt(2)
+                    rs.getString(2),                                    // user
+                    CryptoHelper.publicKeyFromBase64(rs.getString(1)),  // public key
+                    rs.getInt(3)                                        // balance
                 );
             }
             else {
@@ -92,7 +93,7 @@ public class BankData {
     public int getBalance(String key) throws SQLException, AccountDoesntExistException {
         try (PreparedStatement ps = db.prepareStatement("SELECT balance FROM account WHERE public_key = ?")) {
             ps.setString(1, key);
-            ResultSet rs = ps.executeQuery();    // FIXME make sure this works
+            ResultSet rs = ps.executeQuery();
             if (rs.next()) {
                 int balance = rs.getInt(1);
                 return balance;
@@ -136,7 +137,7 @@ public class BankData {
             ps.setString(2, transaction.getDestination());
             ps.setInt(3, transaction.getAmount());
             ps.setInt(4, transaction.getStatus());
-            ps.setString(5, transaction.getTimeStamp());   // FIXME change to timestamp?
+            ps.setString(5, transaction.getTimeStamp());
             ps.executeUpdate();
             ResultSet rs = ps.getGeneratedKeys();
             if (rs.next()) {
@@ -201,7 +202,7 @@ public class BankData {
                     rs.getInt(4),       // sign
                     rs.getInt(5),       // amount
                     rs.getInt(6),       // status
-                    rs.getString(7)     // timestamp             // FIXME change to timestamp?
+                    rs.getString(7)     // timestamp
                 );
                 transactions.add(trans);
             }

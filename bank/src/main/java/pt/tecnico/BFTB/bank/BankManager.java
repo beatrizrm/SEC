@@ -21,10 +21,8 @@ public class BankManager {
     private KeyPair serverKeys;
 
     public BankManager() throws IOException {
-
         this.serverKeys = CryptoHelper.generate_RSA_keyPair();
         CryptoHelper.SaveKeyPair("server",serverKeys);
-
     }
 
 
@@ -36,8 +34,9 @@ public class BankManager {
      * @throws SQLException
      * @throws AccountDoesntExistException
      */
-    public synchronized int checkBalance(BankData db, String key) throws SQLException, AccountDoesntExistException {
-        return db.getBalance(key);
+    public synchronized int checkBalance(BankData db, PublicKey key) throws SQLException, AccountDoesntExistException {
+        String keyb64 = CryptoHelper.encodeToBase64(key.getEncoded());
+        return db.getBalance(keyb64);
     }
 
     /**
@@ -50,16 +49,16 @@ public class BankManager {
      * @throws InsufficientBalanceException
      */
     public synchronized void checkIfTransactionPossible(BankData db, PublicKey source, PublicKey destination, int amount) throws SQLException, AccountDoesntExistException, InsufficientBalanceException {
-        String srcB64 = CryptoHelper.encodeToBase64(source.getEncoded());
-        String dstB64 = CryptoHelper.encodeToBase64(destination.getEncoded());
-        if (db.getBalance(srcB64) < amount) {
-            throw new InsufficientBalanceException(srcB64);
+        String srcb64 = CryptoHelper.encodeToBase64(source.getEncoded());
+        String dstb64 = CryptoHelper.encodeToBase64(destination.getEncoded());
+        if (db.getBalance(srcb64) < amount) {
+            throw new InsufficientBalanceException(srcb64);
         }
-        if (!db.checkIfAccountExists(srcB64)) {
-            throw new AccountDoesntExistException(srcB64);
+        if (!db.checkIfAccountExists(srcb64)) {
+            throw new AccountDoesntExistException(srcb64);
         }
-        if (!db.checkIfAccountExists(dstB64)) {
-            throw new AccountDoesntExistException(dstB64);
+        if (!db.checkIfAccountExists(dstb64)) {
+            throw new AccountDoesntExistException(dstb64);
         }
     }
 
@@ -71,12 +70,9 @@ public class BankManager {
      * @throws SQLException
      * @throws AccountAlreadyExistsException
      */
-    public synchronized void openAccount(BankData db, String user, String key) throws SQLException, AccountAlreadyExistsException {
-        //get Pubkey
-        CryptoHelper.decodeFromBase64(key);
-        PublicKey client_pubkey = CryptoHelper.publicKeyFromBase64(key);
-        System.out.println(key);
-        db.createAccount(key, 500);
+    public synchronized void openAccount(BankData db, String user, PublicKey key) throws SQLException, AccountAlreadyExistsException {
+        String keyb64 = CryptoHelper.encodeToBase64(key.getEncoded());
+        db.createAccount(keyb64, user, 500);
     }
 
     /**
@@ -87,11 +83,12 @@ public class BankManager {
      * @throws SQLException
      * @throws AccountDoesntExistException
      */
-    public synchronized List<Transaction> checkTransactions(BankData db, String key) throws SQLException, AccountDoesntExistException {
-        if (!db.checkIfAccountExists(key)) {
-            throw new AccountDoesntExistException(key);
+    public synchronized List<Transaction> checkTransactions(BankData db, PublicKey key) throws SQLException, AccountDoesntExistException {
+        String keyb64 = CryptoHelper.encodeToBase64(key.getEncoded());
+        if (!db.checkIfAccountExists(keyb64)) {
+            throw new AccountDoesntExistException(keyb64);
         }
-        return db.getTransactionHistory(key);
+        return db.getTransactionHistory(keyb64);
     }
 
     /**
@@ -105,13 +102,13 @@ public class BankManager {
      * @throws AccountPermissionException
      * @throws InsufficientBalanceException
      */
-    public synchronized void checkIfCanReceive(BankData db, String key, Transaction transaction) throws SQLException, 
+    public synchronized void checkIfCanReceive(BankData db, PublicKey key, Transaction transaction) throws SQLException, 
             AccountDoesntExistException, TransactionAlreadyCompletedException, AccountPermissionException, InsufficientBalanceException {
         if (transaction.getStatus() != 0) {
             throw new TransactionAlreadyCompletedException(transaction.getId());
         }
-        if (transaction.getDestination() != key) {
-            throw new AccountPermissionException("hi");
+        if (transaction.getDestination() != CryptoHelper.encodeToBase64(key.getEncoded())) {
+            throw new AccountPermissionException();
         }
         if (transaction.getAmount() > db.getBalance(transaction.getSource())) {
             throw new InsufficientBalanceException();
@@ -131,7 +128,7 @@ public class BankManager {
      * @throws AccountPermissionException
      * @throws TransactionAlreadyCompletedException
      */
-    public synchronized int receiveAmount(BankData db, String key, String transactionId) throws SQLException,
+    public synchronized int receiveAmount(BankData db, PublicKey key, String transactionId) throws SQLException,
             TransactionDoesntExistException, AccountDoesntExistException, TransactionAlreadyCompletedException, AccountPermissionException, InsufficientBalanceException {
         Transaction transaction = db.getTransactionDetails(Integer.parseInt(transactionId));
         checkIfCanReceive(db, key, transaction);
@@ -149,7 +146,7 @@ public class BankManager {
      * @throws SQLException
      */
     public synchronized void addTransactionHistory(BankData db, Transaction transaction) throws SQLException {
-        int transactionId = db.addTransaction(transaction); // check 0?
+        int transactionId = db.addTransaction(transaction);
         db.addTransactionToHistory(transaction.getSource(), transactionId, 0);
         db.addTransactionToHistory(transaction.getDestination(), transactionId, 1);
     }
@@ -162,7 +159,7 @@ public class BankManager {
      * @throws SQLException
      * @throws AccountDoesntExistException
      */
-    public synchronized void addAmount(BankData db, String key, String amount) throws SQLException, AccountDoesntExistException {
-        db.confirmDeposit(key, Integer.parseInt(amount));
+    public synchronized void addAmount(BankData db, PublicKey key, String amount) throws SQLException, AccountDoesntExistException {
+        db.confirmDeposit(CryptoHelper.encodeToBase64(key.getEncoded()), Integer.parseInt(amount));
     }
 }
