@@ -16,8 +16,7 @@ private static final long serialVersionUID = 0L;
     super(builder);
   }
   private checkAccountResponse() {
-    balance_ = "";
-    pendingTransactions_ = "";
+    signature_ = "";
   }
 
   @java.lang.Override
@@ -51,15 +50,22 @@ private static final long serialVersionUID = 0L;
             done = true;
             break;
           case 10: {
-            java.lang.String s = input.readStringRequireUtf8();
+            pt.tecnico.BFTB.bank.grpc.checkAccountResMsg.Builder subBuilder = null;
+            if (msgResponse_ != null) {
+              subBuilder = msgResponse_.toBuilder();
+            }
+            msgResponse_ = input.readMessage(pt.tecnico.BFTB.bank.grpc.checkAccountResMsg.parser(), extensionRegistry);
+            if (subBuilder != null) {
+              subBuilder.mergeFrom(msgResponse_);
+              msgResponse_ = subBuilder.buildPartial();
+            }
 
-            balance_ = s;
             break;
           }
           case 18: {
             java.lang.String s = input.readStringRequireUtf8();
 
-            pendingTransactions_ = s;
+            signature_ = s;
             break;
           }
           default: {
@@ -94,76 +100,64 @@ private static final long serialVersionUID = 0L;
             pt.tecnico.BFTB.bank.grpc.checkAccountResponse.class, pt.tecnico.BFTB.bank.grpc.checkAccountResponse.Builder.class);
   }
 
-  public static final int BALANCE_FIELD_NUMBER = 1;
-  private volatile java.lang.Object balance_;
+  public static final int MSG_RESPONSE_FIELD_NUMBER = 1;
+  private pt.tecnico.BFTB.bank.grpc.checkAccountResMsg msgResponse_;
   /**
-   * <code>string balance = 1;</code>
-   * @return The balance.
+   * <code>.pt.tecnico.BFTB.bank.grpc.checkAccountResMsg msg_response = 1;</code>
+   * @return Whether the msgResponse field is set.
    */
   @java.lang.Override
-  public java.lang.String getBalance() {
-    java.lang.Object ref = balance_;
-    if (ref instanceof java.lang.String) {
-      return (java.lang.String) ref;
-    } else {
-      com.google.protobuf.ByteString bs = 
-          (com.google.protobuf.ByteString) ref;
-      java.lang.String s = bs.toStringUtf8();
-      balance_ = s;
-      return s;
-    }
+  public boolean hasMsgResponse() {
+    return msgResponse_ != null;
   }
   /**
-   * <code>string balance = 1;</code>
-   * @return The bytes for balance.
+   * <code>.pt.tecnico.BFTB.bank.grpc.checkAccountResMsg msg_response = 1;</code>
+   * @return The msgResponse.
    */
   @java.lang.Override
-  public com.google.protobuf.ByteString
-      getBalanceBytes() {
-    java.lang.Object ref = balance_;
-    if (ref instanceof java.lang.String) {
-      com.google.protobuf.ByteString b = 
-          com.google.protobuf.ByteString.copyFromUtf8(
-              (java.lang.String) ref);
-      balance_ = b;
-      return b;
-    } else {
-      return (com.google.protobuf.ByteString) ref;
-    }
+  public pt.tecnico.BFTB.bank.grpc.checkAccountResMsg getMsgResponse() {
+    return msgResponse_ == null ? pt.tecnico.BFTB.bank.grpc.checkAccountResMsg.getDefaultInstance() : msgResponse_;
+  }
+  /**
+   * <code>.pt.tecnico.BFTB.bank.grpc.checkAccountResMsg msg_response = 1;</code>
+   */
+  @java.lang.Override
+  public pt.tecnico.BFTB.bank.grpc.checkAccountResMsgOrBuilder getMsgResponseOrBuilder() {
+    return getMsgResponse();
   }
 
-  public static final int PENDINGTRANSACTIONS_FIELD_NUMBER = 2;
-  private volatile java.lang.Object pendingTransactions_;
+  public static final int SIGNATURE_FIELD_NUMBER = 2;
+  private volatile java.lang.Object signature_;
   /**
-   * <code>string pendingTransactions = 2;</code>
-   * @return The pendingTransactions.
+   * <code>string signature = 2;</code>
+   * @return The signature.
    */
   @java.lang.Override
-  public java.lang.String getPendingTransactions() {
-    java.lang.Object ref = pendingTransactions_;
+  public java.lang.String getSignature() {
+    java.lang.Object ref = signature_;
     if (ref instanceof java.lang.String) {
       return (java.lang.String) ref;
     } else {
       com.google.protobuf.ByteString bs = 
           (com.google.protobuf.ByteString) ref;
       java.lang.String s = bs.toStringUtf8();
-      pendingTransactions_ = s;
+      signature_ = s;
       return s;
     }
   }
   /**
-   * <code>string pendingTransactions = 2;</code>
-   * @return The bytes for pendingTransactions.
+   * <code>string signature = 2;</code>
+   * @return The bytes for signature.
    */
   @java.lang.Override
   public com.google.protobuf.ByteString
-      getPendingTransactionsBytes() {
-    java.lang.Object ref = pendingTransactions_;
+      getSignatureBytes() {
+    java.lang.Object ref = signature_;
     if (ref instanceof java.lang.String) {
       com.google.protobuf.ByteString b = 
           com.google.protobuf.ByteString.copyFromUtf8(
               (java.lang.String) ref);
-      pendingTransactions_ = b;
+      signature_ = b;
       return b;
     } else {
       return (com.google.protobuf.ByteString) ref;
@@ -184,11 +178,11 @@ private static final long serialVersionUID = 0L;
   @java.lang.Override
   public void writeTo(com.google.protobuf.CodedOutputStream output)
                       throws java.io.IOException {
-    if (!getBalanceBytes().isEmpty()) {
-      com.google.protobuf.GeneratedMessageV3.writeString(output, 1, balance_);
+    if (msgResponse_ != null) {
+      output.writeMessage(1, getMsgResponse());
     }
-    if (!getPendingTransactionsBytes().isEmpty()) {
-      com.google.protobuf.GeneratedMessageV3.writeString(output, 2, pendingTransactions_);
+    if (!getSignatureBytes().isEmpty()) {
+      com.google.protobuf.GeneratedMessageV3.writeString(output, 2, signature_);
     }
     unknownFields.writeTo(output);
   }
@@ -199,11 +193,12 @@ private static final long serialVersionUID = 0L;
     if (size != -1) return size;
 
     size = 0;
-    if (!getBalanceBytes().isEmpty()) {
-      size += com.google.protobuf.GeneratedMessageV3.computeStringSize(1, balance_);
+    if (msgResponse_ != null) {
+      size += com.google.protobuf.CodedOutputStream
+        .computeMessageSize(1, getMsgResponse());
     }
-    if (!getPendingTransactionsBytes().isEmpty()) {
-      size += com.google.protobuf.GeneratedMessageV3.computeStringSize(2, pendingTransactions_);
+    if (!getSignatureBytes().isEmpty()) {
+      size += com.google.protobuf.GeneratedMessageV3.computeStringSize(2, signature_);
     }
     size += unknownFields.getSerializedSize();
     memoizedSize = size;
@@ -220,10 +215,13 @@ private static final long serialVersionUID = 0L;
     }
     pt.tecnico.BFTB.bank.grpc.checkAccountResponse other = (pt.tecnico.BFTB.bank.grpc.checkAccountResponse) obj;
 
-    if (!getBalance()
-        .equals(other.getBalance())) return false;
-    if (!getPendingTransactions()
-        .equals(other.getPendingTransactions())) return false;
+    if (hasMsgResponse() != other.hasMsgResponse()) return false;
+    if (hasMsgResponse()) {
+      if (!getMsgResponse()
+          .equals(other.getMsgResponse())) return false;
+    }
+    if (!getSignature()
+        .equals(other.getSignature())) return false;
     if (!unknownFields.equals(other.unknownFields)) return false;
     return true;
   }
@@ -235,10 +233,12 @@ private static final long serialVersionUID = 0L;
     }
     int hash = 41;
     hash = (19 * hash) + getDescriptor().hashCode();
-    hash = (37 * hash) + BALANCE_FIELD_NUMBER;
-    hash = (53 * hash) + getBalance().hashCode();
-    hash = (37 * hash) + PENDINGTRANSACTIONS_FIELD_NUMBER;
-    hash = (53 * hash) + getPendingTransactions().hashCode();
+    if (hasMsgResponse()) {
+      hash = (37 * hash) + MSG_RESPONSE_FIELD_NUMBER;
+      hash = (53 * hash) + getMsgResponse().hashCode();
+    }
+    hash = (37 * hash) + SIGNATURE_FIELD_NUMBER;
+    hash = (53 * hash) + getSignature().hashCode();
     hash = (29 * hash) + unknownFields.hashCode();
     memoizedHashCode = hash;
     return hash;
@@ -372,9 +372,13 @@ private static final long serialVersionUID = 0L;
     @java.lang.Override
     public Builder clear() {
       super.clear();
-      balance_ = "";
-
-      pendingTransactions_ = "";
+      if (msgResponseBuilder_ == null) {
+        msgResponse_ = null;
+      } else {
+        msgResponse_ = null;
+        msgResponseBuilder_ = null;
+      }
+      signature_ = "";
 
       return this;
     }
@@ -402,8 +406,12 @@ private static final long serialVersionUID = 0L;
     @java.lang.Override
     public pt.tecnico.BFTB.bank.grpc.checkAccountResponse buildPartial() {
       pt.tecnico.BFTB.bank.grpc.checkAccountResponse result = new pt.tecnico.BFTB.bank.grpc.checkAccountResponse(this);
-      result.balance_ = balance_;
-      result.pendingTransactions_ = pendingTransactions_;
+      if (msgResponseBuilder_ == null) {
+        result.msgResponse_ = msgResponse_;
+      } else {
+        result.msgResponse_ = msgResponseBuilder_.build();
+      }
+      result.signature_ = signature_;
       onBuilt();
       return result;
     }
@@ -452,12 +460,11 @@ private static final long serialVersionUID = 0L;
 
     public Builder mergeFrom(pt.tecnico.BFTB.bank.grpc.checkAccountResponse other) {
       if (other == pt.tecnico.BFTB.bank.grpc.checkAccountResponse.getDefaultInstance()) return this;
-      if (!other.getBalance().isEmpty()) {
-        balance_ = other.balance_;
-        onChanged();
+      if (other.hasMsgResponse()) {
+        mergeMsgResponse(other.getMsgResponse());
       }
-      if (!other.getPendingTransactions().isEmpty()) {
-        pendingTransactions_ = other.pendingTransactions_;
+      if (!other.getSignature().isEmpty()) {
+        signature_ = other.signature_;
         onChanged();
       }
       this.mergeUnknownFields(other.unknownFields);
@@ -489,154 +496,197 @@ private static final long serialVersionUID = 0L;
       return this;
     }
 
-    private java.lang.Object balance_ = "";
+    private pt.tecnico.BFTB.bank.grpc.checkAccountResMsg msgResponse_;
+    private com.google.protobuf.SingleFieldBuilderV3<
+        pt.tecnico.BFTB.bank.grpc.checkAccountResMsg, pt.tecnico.BFTB.bank.grpc.checkAccountResMsg.Builder, pt.tecnico.BFTB.bank.grpc.checkAccountResMsgOrBuilder> msgResponseBuilder_;
     /**
-     * <code>string balance = 1;</code>
-     * @return The balance.
+     * <code>.pt.tecnico.BFTB.bank.grpc.checkAccountResMsg msg_response = 1;</code>
+     * @return Whether the msgResponse field is set.
      */
-    public java.lang.String getBalance() {
-      java.lang.Object ref = balance_;
-      if (!(ref instanceof java.lang.String)) {
-        com.google.protobuf.ByteString bs =
-            (com.google.protobuf.ByteString) ref;
-        java.lang.String s = bs.toStringUtf8();
-        balance_ = s;
-        return s;
+    public boolean hasMsgResponse() {
+      return msgResponseBuilder_ != null || msgResponse_ != null;
+    }
+    /**
+     * <code>.pt.tecnico.BFTB.bank.grpc.checkAccountResMsg msg_response = 1;</code>
+     * @return The msgResponse.
+     */
+    public pt.tecnico.BFTB.bank.grpc.checkAccountResMsg getMsgResponse() {
+      if (msgResponseBuilder_ == null) {
+        return msgResponse_ == null ? pt.tecnico.BFTB.bank.grpc.checkAccountResMsg.getDefaultInstance() : msgResponse_;
       } else {
-        return (java.lang.String) ref;
+        return msgResponseBuilder_.getMessage();
       }
     }
     /**
-     * <code>string balance = 1;</code>
-     * @return The bytes for balance.
+     * <code>.pt.tecnico.BFTB.bank.grpc.checkAccountResMsg msg_response = 1;</code>
      */
-    public com.google.protobuf.ByteString
-        getBalanceBytes() {
-      java.lang.Object ref = balance_;
-      if (ref instanceof String) {
-        com.google.protobuf.ByteString b = 
-            com.google.protobuf.ByteString.copyFromUtf8(
-                (java.lang.String) ref);
-        balance_ = b;
-        return b;
+    public Builder setMsgResponse(pt.tecnico.BFTB.bank.grpc.checkAccountResMsg value) {
+      if (msgResponseBuilder_ == null) {
+        if (value == null) {
+          throw new NullPointerException();
+        }
+        msgResponse_ = value;
+        onChanged();
       } else {
-        return (com.google.protobuf.ByteString) ref;
+        msgResponseBuilder_.setMessage(value);
+      }
+
+      return this;
+    }
+    /**
+     * <code>.pt.tecnico.BFTB.bank.grpc.checkAccountResMsg msg_response = 1;</code>
+     */
+    public Builder setMsgResponse(
+        pt.tecnico.BFTB.bank.grpc.checkAccountResMsg.Builder builderForValue) {
+      if (msgResponseBuilder_ == null) {
+        msgResponse_ = builderForValue.build();
+        onChanged();
+      } else {
+        msgResponseBuilder_.setMessage(builderForValue.build());
+      }
+
+      return this;
+    }
+    /**
+     * <code>.pt.tecnico.BFTB.bank.grpc.checkAccountResMsg msg_response = 1;</code>
+     */
+    public Builder mergeMsgResponse(pt.tecnico.BFTB.bank.grpc.checkAccountResMsg value) {
+      if (msgResponseBuilder_ == null) {
+        if (msgResponse_ != null) {
+          msgResponse_ =
+            pt.tecnico.BFTB.bank.grpc.checkAccountResMsg.newBuilder(msgResponse_).mergeFrom(value).buildPartial();
+        } else {
+          msgResponse_ = value;
+        }
+        onChanged();
+      } else {
+        msgResponseBuilder_.mergeFrom(value);
+      }
+
+      return this;
+    }
+    /**
+     * <code>.pt.tecnico.BFTB.bank.grpc.checkAccountResMsg msg_response = 1;</code>
+     */
+    public Builder clearMsgResponse() {
+      if (msgResponseBuilder_ == null) {
+        msgResponse_ = null;
+        onChanged();
+      } else {
+        msgResponse_ = null;
+        msgResponseBuilder_ = null;
+      }
+
+      return this;
+    }
+    /**
+     * <code>.pt.tecnico.BFTB.bank.grpc.checkAccountResMsg msg_response = 1;</code>
+     */
+    public pt.tecnico.BFTB.bank.grpc.checkAccountResMsg.Builder getMsgResponseBuilder() {
+      
+      onChanged();
+      return getMsgResponseFieldBuilder().getBuilder();
+    }
+    /**
+     * <code>.pt.tecnico.BFTB.bank.grpc.checkAccountResMsg msg_response = 1;</code>
+     */
+    public pt.tecnico.BFTB.bank.grpc.checkAccountResMsgOrBuilder getMsgResponseOrBuilder() {
+      if (msgResponseBuilder_ != null) {
+        return msgResponseBuilder_.getMessageOrBuilder();
+      } else {
+        return msgResponse_ == null ?
+            pt.tecnico.BFTB.bank.grpc.checkAccountResMsg.getDefaultInstance() : msgResponse_;
       }
     }
     /**
-     * <code>string balance = 1;</code>
-     * @param value The balance to set.
-     * @return This builder for chaining.
+     * <code>.pt.tecnico.BFTB.bank.grpc.checkAccountResMsg msg_response = 1;</code>
      */
-    public Builder setBalance(
-        java.lang.String value) {
-      if (value == null) {
-    throw new NullPointerException();
-  }
-  
-      balance_ = value;
-      onChanged();
-      return this;
-    }
-    /**
-     * <code>string balance = 1;</code>
-     * @return This builder for chaining.
-     */
-    public Builder clearBalance() {
-      
-      balance_ = getDefaultInstance().getBalance();
-      onChanged();
-      return this;
-    }
-    /**
-     * <code>string balance = 1;</code>
-     * @param value The bytes for balance to set.
-     * @return This builder for chaining.
-     */
-    public Builder setBalanceBytes(
-        com.google.protobuf.ByteString value) {
-      if (value == null) {
-    throw new NullPointerException();
-  }
-  checkByteStringIsUtf8(value);
-      
-      balance_ = value;
-      onChanged();
-      return this;
+    private com.google.protobuf.SingleFieldBuilderV3<
+        pt.tecnico.BFTB.bank.grpc.checkAccountResMsg, pt.tecnico.BFTB.bank.grpc.checkAccountResMsg.Builder, pt.tecnico.BFTB.bank.grpc.checkAccountResMsgOrBuilder> 
+        getMsgResponseFieldBuilder() {
+      if (msgResponseBuilder_ == null) {
+        msgResponseBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
+            pt.tecnico.BFTB.bank.grpc.checkAccountResMsg, pt.tecnico.BFTB.bank.grpc.checkAccountResMsg.Builder, pt.tecnico.BFTB.bank.grpc.checkAccountResMsgOrBuilder>(
+                getMsgResponse(),
+                getParentForChildren(),
+                isClean());
+        msgResponse_ = null;
+      }
+      return msgResponseBuilder_;
     }
 
-    private java.lang.Object pendingTransactions_ = "";
+    private java.lang.Object signature_ = "";
     /**
-     * <code>string pendingTransactions = 2;</code>
-     * @return The pendingTransactions.
+     * <code>string signature = 2;</code>
+     * @return The signature.
      */
-    public java.lang.String getPendingTransactions() {
-      java.lang.Object ref = pendingTransactions_;
+    public java.lang.String getSignature() {
+      java.lang.Object ref = signature_;
       if (!(ref instanceof java.lang.String)) {
         com.google.protobuf.ByteString bs =
             (com.google.protobuf.ByteString) ref;
         java.lang.String s = bs.toStringUtf8();
-        pendingTransactions_ = s;
+        signature_ = s;
         return s;
       } else {
         return (java.lang.String) ref;
       }
     }
     /**
-     * <code>string pendingTransactions = 2;</code>
-     * @return The bytes for pendingTransactions.
+     * <code>string signature = 2;</code>
+     * @return The bytes for signature.
      */
     public com.google.protobuf.ByteString
-        getPendingTransactionsBytes() {
-      java.lang.Object ref = pendingTransactions_;
+        getSignatureBytes() {
+      java.lang.Object ref = signature_;
       if (ref instanceof String) {
         com.google.protobuf.ByteString b = 
             com.google.protobuf.ByteString.copyFromUtf8(
                 (java.lang.String) ref);
-        pendingTransactions_ = b;
+        signature_ = b;
         return b;
       } else {
         return (com.google.protobuf.ByteString) ref;
       }
     }
     /**
-     * <code>string pendingTransactions = 2;</code>
-     * @param value The pendingTransactions to set.
+     * <code>string signature = 2;</code>
+     * @param value The signature to set.
      * @return This builder for chaining.
      */
-    public Builder setPendingTransactions(
+    public Builder setSignature(
         java.lang.String value) {
       if (value == null) {
     throw new NullPointerException();
   }
   
-      pendingTransactions_ = value;
+      signature_ = value;
       onChanged();
       return this;
     }
     /**
-     * <code>string pendingTransactions = 2;</code>
+     * <code>string signature = 2;</code>
      * @return This builder for chaining.
      */
-    public Builder clearPendingTransactions() {
+    public Builder clearSignature() {
       
-      pendingTransactions_ = getDefaultInstance().getPendingTransactions();
+      signature_ = getDefaultInstance().getSignature();
       onChanged();
       return this;
     }
     /**
-     * <code>string pendingTransactions = 2;</code>
-     * @param value The bytes for pendingTransactions to set.
+     * <code>string signature = 2;</code>
+     * @param value The bytes for signature to set.
      * @return This builder for chaining.
      */
-    public Builder setPendingTransactionsBytes(
+    public Builder setSignatureBytes(
         com.google.protobuf.ByteString value) {
       if (value == null) {
     throw new NullPointerException();
   }
   checkByteStringIsUtf8(value);
       
-      pendingTransactions_ = value;
+      signature_ = value;
       onChanged();
       return this;
     }

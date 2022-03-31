@@ -3,10 +3,12 @@ pt\tecnico\BFTB\bank\grpc\checkAccountResponse$1.class
 pt\tecnico\BFTB\bank\grpc\BankServiceGrpc$BankServiceBaseDescriptorSupplier.class
 pt\tecnico\BFTB\bank\grpc\BankServiceGrpc$BankServiceBlockingStub.class
 pt\tecnico\BFTB\bank\grpc\sendAmountResponse$1.class
+pt\tecnico\BFTB\bank\grpc\Status$Builder.class
 pt\tecnico\BFTB\bank\grpc\BankServiceGrpc$3.class
 pt\tecnico\BFTB\bank\grpc\sendAmountContent.class
 pt\tecnico\BFTB\bank\grpc\checkAccountRequest.class
 pt\tecnico\BFTB\bank\grpc\openAccountResponseOrBuilder.class
+pt\tecnico\BFTB\bank\grpc\StatusOrBuilder.class
 pt\tecnico\BFTB\bank\grpc\checkAccountResponse$Builder.class
 pt\tecnico\BFTB\bank\grpc\openAccountRequest$1.class
 pt\tecnico\BFTB\bank\grpc\sendAmountResponse.class
@@ -26,6 +28,7 @@ pt\tecnico\BFTB\bank\grpc\receiveAmountResponseOrBuilder.class
 pt\tecnico\BFTB\bank\grpc\checkAccountResponseOrBuilder.class
 pt\tecnico\BFTB\bank\grpc\openAccountResponse.class
 pt\tecnico\BFTB\bank\grpc\sendAmountRequest$1.class
+pt\tecnico\BFTB\bank\grpc\checkAccountResMsg.class
 pt\tecnico\BFTB\bank\grpc\BankServiceGrpc$BankServiceFutureStub.class
 pt\tecnico\BFTB\bank\grpc\sendAmountContentOrBuilder.class
 pt\tecnico\BFTB\bank\grpc\sendAmountContent$Builder.class
@@ -36,9 +39,12 @@ pt\tecnico\BFTB\bank\grpc\BankServiceGrpc$BankServiceMethodDescriptorSupplier.cl
 pt\tecnico\BFTB\bank\grpc\checkAccountRequest$Builder.class
 pt\tecnico\BFTB\bank\grpc\receiveAmountResponse$Builder.class
 pt\tecnico\BFTB\bank\grpc\receiveAmountRequest.class
+pt\tecnico\BFTB\bank\grpc\Status$1.class
 pt\tecnico\BFTB\bank\grpc\auditRequest$1.class
 pt\tecnico\BFTB\bank\grpc\checkAccountRequest$1.class
+pt\tecnico\BFTB\bank\grpc\checkAccountResMsg$Builder.class
 pt\tecnico\BFTB\bank\grpc\openAccountResponse$Builder.class
+pt\tecnico\BFTB\bank\grpc\checkAccountResMsg$1.class
 pt\tecnico\BFTB\bank\grpc\sendAmountResponseOrBuilder.class
 pt\tecnico\BFTB\bank\grpc\auditResponse.class
 pt\tecnico\BFTB\bank\grpc\BankServiceGrpc$BankServiceImplBase.class
@@ -46,11 +52,13 @@ pt\tecnico\BFTB\bank\grpc\sendAmountContent$1.class
 pt\tecnico\BFTB\bank\grpc\receiveAmountResponse.class
 pt\tecnico\BFTB\bank\grpc\auditResponse$1.class
 pt\tecnico\BFTB\bank\grpc\receiveAmountRequest$Builder.class
+pt\tecnico\BFTB\bank\grpc\checkAccountResMsgOrBuilder.class
 pt\tecnico\BFTB\bank\grpc\receiveAmountContent.class
 pt\tecnico\BFTB\bank\grpc\auditRequest$Builder.class
 pt\tecnico\BFTB\bank\grpc\sendAmountRequest$Builder.class
 pt\tecnico\BFTB\bank\grpc\openAccountRequestOrBuilder.class
 pt\tecnico\BFTB\bank\grpc\receiveAmountContent$Builder.class
+pt\tecnico\BFTB\bank\grpc\Status.class
 pt\tecnico\BFTB\bank\grpc\auditResponseOrBuilder.class
 pt\tecnico\BFTB\bank\grpc\BankServiceGrpc$BankServiceStub.class
 pt\tecnico\BFTB\bank\grpc\BankServiceGrpc$MethodHandlers.class

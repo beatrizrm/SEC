@@ -199,6 +199,7 @@ public class ClientServiceImpl {
                     //
 
                     int status = this.openAccountRequest(args[1]);
+                    System.out.println(status);
                     if(status == 1){
                         response = "OK";
                     } else {

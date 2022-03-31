@@ -8,8 +8,29 @@ public interface receiveAmountResponseOrBuilder extends
     com.google.protobuf.MessageOrBuilder {
 
   /**
-   * <code>int32 status = 1;</code>
+   * <code>.pt.tecnico.BFTB.bank.grpc.Status status = 1;</code>
+   * @return Whether the status field is set.
+   */
+  boolean hasStatus();
+  /**
+   * <code>.pt.tecnico.BFTB.bank.grpc.Status status = 1;</code>
    * @return The status.
    */
-  int getStatus();
+  pt.tecnico.BFTB.bank.grpc.Status getStatus();
+  /**
+   * <code>.pt.tecnico.BFTB.bank.grpc.Status status = 1;</code>
+   */
+  pt.tecnico.BFTB.bank.grpc.StatusOrBuilder getStatusOrBuilder();
+
+  /**
+   * <code>string signature = 2;</code>
+   * @return The signature.
+   */
+  java.lang.String getSignature();
+  /**
+   * <code>string signature = 2;</code>
+   * @return The bytes for signature.
+   */
+  com.google.protobuf.ByteString
+      getSignatureBytes();
 }

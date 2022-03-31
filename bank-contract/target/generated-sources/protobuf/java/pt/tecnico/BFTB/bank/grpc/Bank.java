@@ -15,6 +15,11 @@ public final class Bank {
         (com.google.protobuf.ExtensionRegistryLite) registry);
   }
   static final com.google.protobuf.Descriptors.Descriptor
+    internal_static_pt_tecnico_BFTB_bank_grpc_Status_descriptor;
+  static final 
+    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      internal_static_pt_tecnico_BFTB_bank_grpc_Status_fieldAccessorTable;
+  static final com.google.protobuf.Descriptors.Descriptor
     internal_static_pt_tecnico_BFTB_bank_grpc_openAccountRequest_descriptor;
   static final 
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
@@ -55,6 +60,11 @@ public final class Bank {
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_pt_tecnico_BFTB_bank_grpc_checkAccountRequest_fieldAccessorTable;
   static final com.google.protobuf.Descriptors.Descriptor
+    internal_static_pt_tecnico_BFTB_bank_grpc_checkAccountResMsg_descriptor;
+  static final 
+    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      internal_static_pt_tecnico_BFTB_bank_grpc_checkAccountResMsg_fieldAccessorTable;
+  static final com.google.protobuf.Descriptors.Descriptor
     internal_static_pt_tecnico_BFTB_bank_grpc_checkAccountResponse_descriptor;
   static final 
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
@@ -84,115 +94,135 @@ public final class Bank {
   static {
     java.lang.String[] descriptorData = {
       "\n\nbank.proto\022\031pt.tecnico.BFTB.bank.grpc\"" +
-      "/\n\022openAccountRequest\022\014\n\004user\030\001 \001(\t\022\013\n\003k" +
-      "ey\030\002 \001(\t\"%\n\023openAccountResponse\022\016\n\006statu" +
-      "s\030\001 \001(\005\"\033\n\014auditRequest\022\013\n\003key\030\001 \001(\t\"+\n\r" +
+      "\030\n\006Status\022\016\n\006status\030\001 \001(\005\"/\n\022openAccount" +
+      "Request\022\014\n\004user\030\001 \001(\t\022\013\n\003key\030\002 \001(\t\"[\n\023op" +
+      "enAccountResponse\0221\n\006status\030\001 \001(\0132!.pt.t" +
+      "ecnico.BFTB.bank.grpc.Status\022\021\n\tsignatur" +
+      "e\030\002 \001(\t\"\033\n\014auditRequest\022\013\n\003key\030\001 \001(\t\">\n\r" +
       "auditResponse\022\032\n\022transactionHistory\030\001 \001(" +
-      "\t\":\n\024receiveAmountContent\022\013\n\003key\030\001 \001(\t\022\025" +
-      "\n\rtransactionId\030\002 \001(\t\"g\n\024receiveAmountRe" +
-      "quest\022<\n\003msg\030\001 \001(\0132/.pt.tecnico.BFTB.ban" +
-      "k.grpc.receiveAmountContent\022\021\n\tsignature" +
-      "\030\002 \001(\t\"\'\n\025receiveAmountResponse\022\016\n\006statu" +
-      "s\030\001 \001(\005\"\"\n\023checkAccountRequest\022\013\n\003key\030\001 " +
-      "\001(\t\"D\n\024checkAccountResponse\022\017\n\007balance\030\001" +
-      " \001(\t\022\033\n\023pendingTransactions\030\002 \001(\t\"H\n\021sen" +
-      "dAmountContent\022\016\n\006source\030\001 \001(\t\022\023\n\013destin" +
-      "ation\030\002 \001(\t\022\016\n\006amount\030\003 \001(\t\"e\n\021sendAmoun" +
-      "tRequest\022=\n\007message\030\001 \001(\0132,.pt.tecnico.B" +
-      "FTB.bank.grpc.sendAmountContent\022\021\n\tsigna" +
-      "ture\030\002 \001(\t\"$\n\022sendAmountResponse\022\016\n\006stat" +
-      "us\030\001 \001(\0052\247\004\n\013BankService\022l\n\013openAccount\022" +
-      "-.pt.tecnico.BFTB.bank.grpc.openAccountR" +
-      "equest\032..pt.tecnico.BFTB.bank.grpc.openA" +
-      "ccountResponse\022i\n\nsendAmount\022,.pt.tecnic" +
-      "o.BFTB.bank.grpc.sendAmountRequest\032-.pt." +
-      "tecnico.BFTB.bank.grpc.sendAmountRespons" +
-      "e\022o\n\014checkAccount\022..pt.tecnico.BFTB.bank" +
-      ".grpc.checkAccountRequest\032/.pt.tecnico.B" +
-      "FTB.bank.grpc.checkAccountResponse\022r\n\rre" +
-      "ceiveAmount\022/.pt.tecnico.BFTB.bank.grpc." +
-      "receiveAmountRequest\0320.pt.tecnico.BFTB.b" +
-      "ank.grpc.receiveAmountResponse\022Z\n\005audit\022" +
-      "\'.pt.tecnico.BFTB.bank.grpc.auditRequest" +
-      "\032(.pt.tecnico.BFTB.bank.grpc.auditRespon" +
-      "seB\002P\001b\006proto3"
+      "\t\022\021\n\tsignature\030\002 \001(\t\":\n\024receiveAmountCon" +
+      "tent\022\013\n\003key\030\001 \001(\t\022\025\n\rtransactionId\030\002 \001(\t" +
+      "\"g\n\024receiveAmountRequest\022<\n\003msg\030\001 \001(\0132/." +
+      "pt.tecnico.BFTB.bank.grpc.receiveAmountC" +
+      "ontent\022\021\n\tsignature\030\002 \001(\t\"]\n\025receiveAmou" +
+      "ntResponse\0221\n\006status\030\001 \001(\0132!.pt.tecnico." +
+      "BFTB.bank.grpc.Status\022\021\n\tsignature\030\002 \001(\t" +
+      "\"\"\n\023checkAccountRequest\022\013\n\003key\030\001 \001(\t\"B\n\022" +
+      "checkAccountResMsg\022\017\n\007balance\030\001 \001(\t\022\033\n\023p" +
+      "endingTransactions\030\002 \001(\t\"n\n\024checkAccount" +
+      "Response\022C\n\014msg_response\030\001 \001(\0132-.pt.tecn" +
+      "ico.BFTB.bank.grpc.checkAccountResMsg\022\021\n" +
+      "\tsignature\030\002 \001(\t\"H\n\021sendAmountContent\022\016\n" +
+      "\006source\030\001 \001(\t\022\023\n\013destination\030\002 \001(\t\022\016\n\006am" +
+      "ount\030\003 \001(\t\"e\n\021sendAmountRequest\022=\n\007messa" +
+      "ge\030\001 \001(\0132,.pt.tecnico.BFTB.bank.grpc.sen" +
+      "dAmountContent\022\021\n\tsignature\030\002 \001(\t\"Z\n\022sen" +
+      "dAmountResponse\0221\n\006status\030\001 \001(\0132!.pt.tec" +
+      "nico.BFTB.bank.grpc.Status\022\021\n\tsignature\030" +
+      "\002 \001(\t2\247\004\n\013BankService\022l\n\013openAccount\022-.p" +
+      "t.tecnico.BFTB.bank.grpc.openAccountRequ" +
+      "est\032..pt.tecnico.BFTB.bank.grpc.openAcco" +
+      "untResponse\022i\n\nsendAmount\022,.pt.tecnico.B" +
+      "FTB.bank.grpc.sendAmountRequest\032-.pt.tec" +
+      "nico.BFTB.bank.grpc.sendAmountResponse\022o" +
+      "\n\014checkAccount\022..pt.tecnico.BFTB.bank.gr" +
+      "pc.checkAccountRequest\032/.pt.tecnico.BFTB" +
+      ".bank.grpc.checkAccountResponse\022r\n\rrecei" +
+      "veAmount\022/.pt.tecnico.BFTB.bank.grpc.rec" +
+      "eiveAmountRequest\0320.pt.tecnico.BFTB.bank" +
+      ".grpc.receiveAmountResponse\022Z\n\005audit\022\'.p" +
+      "t.tecnico.BFTB.bank.grpc.auditRequest\032(." +
+      "pt.tecnico.BFTB.bank.grpc.auditResponseB" +
+      "\002P\001b\006proto3"
     };
     descriptor = com.google.protobuf.Descriptors.FileDescriptor
       .internalBuildGeneratedFileFrom(descriptorData,
         new com.google.protobuf.Descriptors.FileDescriptor[] {
         });
-    internal_static_pt_tecnico_BFTB_bank_grpc_openAccountRequest_descriptor =
+    internal_static_pt_tecnico_BFTB_bank_grpc_Status_descriptor =
       getDescriptor().getMessageTypes().get(0);
+    internal_static_pt_tecnico_BFTB_bank_grpc_Status_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+        internal_static_pt_tecnico_BFTB_bank_grpc_Status_descriptor,
+        new java.lang.String[] { "Status", });
+    internal_static_pt_tecnico_BFTB_bank_grpc_openAccountRequest_descriptor =
+      getDescriptor().getMessageTypes().get(1);
     internal_static_pt_tecnico_BFTB_bank_grpc_openAccountRequest_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_pt_tecnico_BFTB_bank_grpc_openAccountRequest_descriptor,
         new java.lang.String[] { "User", "Key", });
     internal_static_pt_tecnico_BFTB_bank_grpc_openAccountResponse_descriptor =
-      getDescriptor().getMessageTypes().get(1);
+      getDescriptor().getMessageTypes().get(2);
     internal_static_pt_tecnico_BFTB_bank_grpc_openAccountResponse_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_pt_tecnico_BFTB_bank_grpc_openAccountResponse_descriptor,
-        new java.lang.String[] { "Status", });
+        new java.lang.String[] { "Status", "Signature", });
     internal_static_pt_tecnico_BFTB_bank_grpc_auditRequest_descriptor =
-      getDescriptor().getMessageTypes().get(2);
+      getDescriptor().getMessageTypes().get(3);
     internal_static_pt_tecnico_BFTB_bank_grpc_auditRequest_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_pt_tecnico_BFTB_bank_grpc_auditRequest_descriptor,
         new java.lang.String[] { "Key", });
     internal_static_pt_tecnico_BFTB_bank_grpc_auditResponse_descriptor =
-      getDescriptor().getMessageTypes().get(3);
+      getDescriptor().getMessageTypes().get(4);
     internal_static_pt_tecnico_BFTB_bank_grpc_auditResponse_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_pt_tecnico_BFTB_bank_grpc_auditResponse_descriptor,
-        new java.lang.String[] { "TransactionHistory", });
+        new java.lang.String[] { "TransactionHistory", "Signature", });
     internal_static_pt_tecnico_BFTB_bank_grpc_receiveAmountContent_descriptor =
-      getDescriptor().getMessageTypes().get(4);
+      getDescriptor().getMessageTypes().get(5);
     internal_static_pt_tecnico_BFTB_bank_grpc_receiveAmountContent_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_pt_tecnico_BFTB_bank_grpc_receiveAmountContent_descriptor,
         new java.lang.String[] { "Key", "TransactionId", });
     internal_static_pt_tecnico_BFTB_bank_grpc_receiveAmountRequest_descriptor =
-      getDescriptor().getMessageTypes().get(5);
+      getDescriptor().getMessageTypes().get(6);
     internal_static_pt_tecnico_BFTB_bank_grpc_receiveAmountRequest_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_pt_tecnico_BFTB_bank_grpc_receiveAmountRequest_descriptor,
         new java.lang.String[] { "Msg", "Signature", });
     internal_static_pt_tecnico_BFTB_bank_grpc_receiveAmountResponse_descriptor =
-      getDescriptor().getMessageTypes().get(6);
+      getDescriptor().getMessageTypes().get(7);
     internal_static_pt_tecnico_BFTB_bank_grpc_receiveAmountResponse_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_pt_tecnico_BFTB_bank_grpc_receiveAmountResponse_descriptor,
-        new java.lang.String[] { "Status", });
+        new java.lang.String[] { "Status", "Signature", });
     internal_static_pt_tecnico_BFTB_bank_grpc_checkAccountRequest_descriptor =
-      getDescriptor().getMessageTypes().get(7);
+      getDescriptor().getMessageTypes().get(8);
     internal_static_pt_tecnico_BFTB_bank_grpc_checkAccountRequest_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_pt_tecnico_BFTB_bank_grpc_checkAccountRequest_descriptor,
         new java.lang.String[] { "Key", });
+    internal_static_pt_tecnico_BFTB_bank_grpc_checkAccountResMsg_descriptor =
+      getDescriptor().getMessageTypes().get(9);
+    internal_static_pt_tecnico_BFTB_bank_grpc_checkAccountResMsg_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+        internal_static_pt_tecnico_BFTB_bank_grpc_checkAccountResMsg_descriptor,
+        new java.lang.String[] { "Balance", "PendingTransactions", });
     internal_static_pt_tecnico_BFTB_bank_grpc_checkAccountResponse_descriptor =
-      getDescriptor().getMessageTypes().get(8);
+      getDescriptor().getMessageTypes().get(10);
     internal_static_pt_tecnico_BFTB_bank_grpc_checkAccountResponse_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_pt_tecnico_BFTB_bank_grpc_checkAccountResponse_descriptor,
-        new java.lang.String[] { "Balance", "PendingTransactions", });
+        new java.lang.String[] { "MsgResponse", "Signature", });
     internal_static_pt_tecnico_BFTB_bank_grpc_sendAmountContent_descriptor =
-      getDescriptor().getMessageTypes().get(9);
+      getDescriptor().getMessageTypes().get(11);
     internal_static_pt_tecnico_BFTB_bank_grpc_sendAmountContent_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_pt_tecnico_BFTB_bank_grpc_sendAmountContent_descriptor,
         new java.lang.String[] { "Source", "Destination", "Amount", });
     internal_static_pt_tecnico_BFTB_bank_grpc_sendAmountRequest_descriptor =
-      getDescriptor().getMessageTypes().get(10);
+      getDescriptor().getMessageTypes().get(12);
     internal_static_pt_tecnico_BFTB_bank_grpc_sendAmountRequest_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_pt_tecnico_BFTB_bank_grpc_sendAmountRequest_descriptor,
         new java.lang.String[] { "Message", "Signature", });
     internal_static_pt_tecnico_BFTB_bank_grpc_sendAmountResponse_descriptor =
-      getDescriptor().getMessageTypes().get(11);
+      getDescriptor().getMessageTypes().get(13);
     internal_static_pt_tecnico_BFTB_bank_grpc_sendAmountResponse_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_pt_tecnico_BFTB_bank_grpc_sendAmountResponse_descriptor,
-        new java.lang.String[] { "Status", });
+        new java.lang.String[] { "Status", "Signature", });
   }
 
   // @@protoc_insertion_point(outer_class_scope)

@@ -16,6 +16,7 @@ private static final long serialVersionUID = 0L;
     super(builder);
   }
   private openAccountResponse() {
+    signature_ = "";
   }
 
   @java.lang.Override
@@ -48,9 +49,23 @@ private static final long serialVersionUID = 0L;
           case 0:
             done = true;
             break;
-          case 8: {
+          case 10: {
+            pt.tecnico.BFTB.bank.grpc.Status.Builder subBuilder = null;
+            if (status_ != null) {
+              subBuilder = status_.toBuilder();
+            }
+            status_ = input.readMessage(pt.tecnico.BFTB.bank.grpc.Status.parser(), extensionRegistry);
+            if (subBuilder != null) {
+              subBuilder.mergeFrom(status_);
+              status_ = subBuilder.buildPartial();
+            }
 
-            status_ = input.readInt32();
+            break;
+          }
+          case 18: {
+            java.lang.String s = input.readStringRequireUtf8();
+
+            signature_ = s;
             break;
           }
           default: {
@@ -86,14 +101,67 @@ private static final long serialVersionUID = 0L;
   }
 
   public static final int STATUS_FIELD_NUMBER = 1;
-  private int status_;
+  private pt.tecnico.BFTB.bank.grpc.Status status_;
   /**
-   * <code>int32 status = 1;</code>
+   * <code>.pt.tecnico.BFTB.bank.grpc.Status status = 1;</code>
+   * @return Whether the status field is set.
+   */
+  @java.lang.Override
+  public boolean hasStatus() {
+    return status_ != null;
+  }
+  /**
+   * <code>.pt.tecnico.BFTB.bank.grpc.Status status = 1;</code>
    * @return The status.
    */
   @java.lang.Override
-  public int getStatus() {
-    return status_;
+  public pt.tecnico.BFTB.bank.grpc.Status getStatus() {
+    return status_ == null ? pt.tecnico.BFTB.bank.grpc.Status.getDefaultInstance() : status_;
+  }
+  /**
+   * <code>.pt.tecnico.BFTB.bank.grpc.Status status = 1;</code>
+   */
+  @java.lang.Override
+  public pt.tecnico.BFTB.bank.grpc.StatusOrBuilder getStatusOrBuilder() {
+    return getStatus();
+  }
+
+  public static final int SIGNATURE_FIELD_NUMBER = 2;
+  private volatile java.lang.Object signature_;
+  /**
+   * <code>string signature = 2;</code>
+   * @return The signature.
+   */
+  @java.lang.Override
+  public java.lang.String getSignature() {
+    java.lang.Object ref = signature_;
+    if (ref instanceof java.lang.String) {
+      return (java.lang.String) ref;
+    } else {
+      com.google.protobuf.ByteString bs = 
+          (com.google.protobuf.ByteString) ref;
+      java.lang.String s = bs.toStringUtf8();
+      signature_ = s;
+      return s;
+    }
+  }
+  /**
+   * <code>string signature = 2;</code>
+   * @return The bytes for signature.
+   */
+  @java.lang.Override
+  public com.google.protobuf.ByteString
+      getSignatureBytes() {
+    java.lang.Object ref = signature_;
+    if (ref instanceof java.lang.String) {
+      com.google.protobuf.ByteString b = 
+          com.google.protobuf.ByteString.copyFromUtf8(
+              (java.lang.String) ref);
+      signature_ = b;
+      return b;
+    } else {
+      return (com.google.protobuf.ByteString) ref;
+    }
   }
 
   private byte memoizedIsInitialized = -1;
@@ -110,8 +178,11 @@ private static final long serialVersionUID = 0L;
   @java.lang.Override
   public void writeTo(com.google.protobuf.CodedOutputStream output)
                       throws java.io.IOException {
-    if (status_ != 0) {
-      output.writeInt32(1, status_);
+    if (status_ != null) {
+      output.writeMessage(1, getStatus());
+    }
+    if (!getSignatureBytes().isEmpty()) {
+      com.google.protobuf.GeneratedMessageV3.writeString(output, 2, signature_);
     }
     unknownFields.writeTo(output);
   }
@@ -122,9 +193,12 @@ private static final long serialVersionUID = 0L;
     if (size != -1) return size;
 
     size = 0;
-    if (status_ != 0) {
+    if (status_ != null) {
       size += com.google.protobuf.CodedOutputStream
-        .computeInt32Size(1, status_);
+        .computeMessageSize(1, getStatus());
+    }
+    if (!getSignatureBytes().isEmpty()) {
+      size += com.google.protobuf.GeneratedMessageV3.computeStringSize(2, signature_);
     }
     size += unknownFields.getSerializedSize();
     memoizedSize = size;
@@ -141,8 +215,13 @@ private static final long serialVersionUID = 0L;
     }
     pt.tecnico.BFTB.bank.grpc.openAccountResponse other = (pt.tecnico.BFTB.bank.grpc.openAccountResponse) obj;
 
-    if (getStatus()
-        != other.getStatus()) return false;
+    if (hasStatus() != other.hasStatus()) return false;
+    if (hasStatus()) {
+      if (!getStatus()
+          .equals(other.getStatus())) return false;
+    }
+    if (!getSignature()
+        .equals(other.getSignature())) return false;
     if (!unknownFields.equals(other.unknownFields)) return false;
     return true;
   }
@@ -154,8 +233,12 @@ private static final long serialVersionUID = 0L;
     }
     int hash = 41;
     hash = (19 * hash) + getDescriptor().hashCode();
-    hash = (37 * hash) + STATUS_FIELD_NUMBER;
-    hash = (53 * hash) + getStatus();
+    if (hasStatus()) {
+      hash = (37 * hash) + STATUS_FIELD_NUMBER;
+      hash = (53 * hash) + getStatus().hashCode();
+    }
+    hash = (37 * hash) + SIGNATURE_FIELD_NUMBER;
+    hash = (53 * hash) + getSignature().hashCode();
     hash = (29 * hash) + unknownFields.hashCode();
     memoizedHashCode = hash;
     return hash;
@@ -289,7 +372,13 @@ private static final long serialVersionUID = 0L;
     @java.lang.Override
     public Builder clear() {
       super.clear();
-      status_ = 0;
+      if (statusBuilder_ == null) {
+        status_ = null;
+      } else {
+        status_ = null;
+        statusBuilder_ = null;
+      }
+      signature_ = "";
 
       return this;
     }
@@ -317,7 +406,12 @@ private static final long serialVersionUID = 0L;
     @java.lang.Override
     public pt.tecnico.BFTB.bank.grpc.openAccountResponse buildPartial() {
       pt.tecnico.BFTB.bank.grpc.openAccountResponse result = new pt.tecnico.BFTB.bank.grpc.openAccountResponse(this);
-      result.status_ = status_;
+      if (statusBuilder_ == null) {
+        result.status_ = status_;
+      } else {
+        result.status_ = statusBuilder_.build();
+      }
+      result.signature_ = signature_;
       onBuilt();
       return result;
     }
@@ -366,8 +460,12 @@ private static final long serialVersionUID = 0L;
 
     public Builder mergeFrom(pt.tecnico.BFTB.bank.grpc.openAccountResponse other) {
       if (other == pt.tecnico.BFTB.bank.grpc.openAccountResponse.getDefaultInstance()) return this;
-      if (other.getStatus() != 0) {
-        setStatus(other.getStatus());
+      if (other.hasStatus()) {
+        mergeStatus(other.getStatus());
+      }
+      if (!other.getSignature().isEmpty()) {
+        signature_ = other.signature_;
+        onChanged();
       }
       this.mergeUnknownFields(other.unknownFields);
       onChanged();
@@ -398,33 +496,197 @@ private static final long serialVersionUID = 0L;
       return this;
     }
 
-    private int status_ ;
+    private pt.tecnico.BFTB.bank.grpc.Status status_;
+    private com.google.protobuf.SingleFieldBuilderV3<
+        pt.tecnico.BFTB.bank.grpc.Status, pt.tecnico.BFTB.bank.grpc.Status.Builder, pt.tecnico.BFTB.bank.grpc.StatusOrBuilder> statusBuilder_;
     /**
-     * <code>int32 status = 1;</code>
-     * @return The status.
+     * <code>.pt.tecnico.BFTB.bank.grpc.Status status = 1;</code>
+     * @return Whether the status field is set.
      */
-    @java.lang.Override
-    public int getStatus() {
-      return status_;
+    public boolean hasStatus() {
+      return statusBuilder_ != null || status_ != null;
     }
     /**
-     * <code>int32 status = 1;</code>
-     * @param value The status to set.
+     * <code>.pt.tecnico.BFTB.bank.grpc.Status status = 1;</code>
+     * @return The status.
+     */
+    public pt.tecnico.BFTB.bank.grpc.Status getStatus() {
+      if (statusBuilder_ == null) {
+        return status_ == null ? pt.tecnico.BFTB.bank.grpc.Status.getDefaultInstance() : status_;
+      } else {
+        return statusBuilder_.getMessage();
+      }
+    }
+    /**
+     * <code>.pt.tecnico.BFTB.bank.grpc.Status status = 1;</code>
+     */
+    public Builder setStatus(pt.tecnico.BFTB.bank.grpc.Status value) {
+      if (statusBuilder_ == null) {
+        if (value == null) {
+          throw new NullPointerException();
+        }
+        status_ = value;
+        onChanged();
+      } else {
+        statusBuilder_.setMessage(value);
+      }
+
+      return this;
+    }
+    /**
+     * <code>.pt.tecnico.BFTB.bank.grpc.Status status = 1;</code>
+     */
+    public Builder setStatus(
+        pt.tecnico.BFTB.bank.grpc.Status.Builder builderForValue) {
+      if (statusBuilder_ == null) {
+        status_ = builderForValue.build();
+        onChanged();
+      } else {
+        statusBuilder_.setMessage(builderForValue.build());
+      }
+
+      return this;
+    }
+    /**
+     * <code>.pt.tecnico.BFTB.bank.grpc.Status status = 1;</code>
+     */
+    public Builder mergeStatus(pt.tecnico.BFTB.bank.grpc.Status value) {
+      if (statusBuilder_ == null) {
+        if (status_ != null) {
+          status_ =
+            pt.tecnico.BFTB.bank.grpc.Status.newBuilder(status_).mergeFrom(value).buildPartial();
+        } else {
+          status_ = value;
+        }
+        onChanged();
+      } else {
+        statusBuilder_.mergeFrom(value);
+      }
+
+      return this;
+    }
+    /**
+     * <code>.pt.tecnico.BFTB.bank.grpc.Status status = 1;</code>
+     */
+    public Builder clearStatus() {
+      if (statusBuilder_ == null) {
+        status_ = null;
+        onChanged();
+      } else {
+        status_ = null;
+        statusBuilder_ = null;
+      }
+
+      return this;
+    }
+    /**
+     * <code>.pt.tecnico.BFTB.bank.grpc.Status status = 1;</code>
+     */
+    public pt.tecnico.BFTB.bank.grpc.Status.Builder getStatusBuilder() {
+      
+      onChanged();
+      return getStatusFieldBuilder().getBuilder();
+    }
+    /**
+     * <code>.pt.tecnico.BFTB.bank.grpc.Status status = 1;</code>
+     */
+    public pt.tecnico.BFTB.bank.grpc.StatusOrBuilder getStatusOrBuilder() {
+      if (statusBuilder_ != null) {
+        return statusBuilder_.getMessageOrBuilder();
+      } else {
+        return status_ == null ?
+            pt.tecnico.BFTB.bank.grpc.Status.getDefaultInstance() : status_;
+      }
+    }
+    /**
+     * <code>.pt.tecnico.BFTB.bank.grpc.Status status = 1;</code>
+     */
+    private com.google.protobuf.SingleFieldBuilderV3<
+        pt.tecnico.BFTB.bank.grpc.Status, pt.tecnico.BFTB.bank.grpc.Status.Builder, pt.tecnico.BFTB.bank.grpc.StatusOrBuilder> 
+        getStatusFieldBuilder() {
+      if (statusBuilder_ == null) {
+        statusBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
+            pt.tecnico.BFTB.bank.grpc.Status, pt.tecnico.BFTB.bank.grpc.Status.Builder, pt.tecnico.BFTB.bank.grpc.StatusOrBuilder>(
+                getStatus(),
+                getParentForChildren(),
+                isClean());
+        status_ = null;
+      }
+      return statusBuilder_;
+    }
+
+    private java.lang.Object signature_ = "";
+    /**
+     * <code>string signature = 2;</code>
+     * @return The signature.
+     */
+    public java.lang.String getSignature() {
+      java.lang.Object ref = signature_;
+      if (!(ref instanceof java.lang.String)) {
+        com.google.protobuf.ByteString bs =
+            (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        signature_ = s;
+        return s;
+      } else {
+        return (java.lang.String) ref;
+      }
+    }
+    /**
+     * <code>string signature = 2;</code>
+     * @return The bytes for signature.
+     */
+    public com.google.protobuf.ByteString
+        getSignatureBytes() {
+      java.lang.Object ref = signature_;
+      if (ref instanceof String) {
+        com.google.protobuf.ByteString b = 
+            com.google.protobuf.ByteString.copyFromUtf8(
+                (java.lang.String) ref);
+        signature_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+    /**
+     * <code>string signature = 2;</code>
+     * @param value The signature to set.
      * @return This builder for chaining.
      */
-    public Builder setStatus(int value) {
-      
-      status_ = value;
+    public Builder setSignature(
+        java.lang.String value) {
+      if (value == null) {
+    throw new NullPointerException();
+  }
+  
+      signature_ = value;
       onChanged();
       return this;
     }
     /**
-     * <code>int32 status = 1;</code>
+     * <code>string signature = 2;</code>
      * @return This builder for chaining.
      */
-    public Builder clearStatus() {
+    public Builder clearSignature() {
       
-      status_ = 0;
+      signature_ = getDefaultInstance().getSignature();
+      onChanged();
+      return this;
+    }
+    /**
+     * <code>string signature = 2;</code>
+     * @param value The bytes for signature to set.
+     * @return This builder for chaining.
+     */
+    public Builder setSignatureBytes(
+        com.google.protobuf.ByteString value) {
+      if (value == null) {
+    throw new NullPointerException();
+  }
+  checkByteStringIsUtf8(value);
+      
+      signature_ = value;
       onChanged();
       return this;
     }

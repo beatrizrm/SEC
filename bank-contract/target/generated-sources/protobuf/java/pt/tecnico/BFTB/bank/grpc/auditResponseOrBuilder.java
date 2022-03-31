@@ -18,4 +18,16 @@ public interface auditResponseOrBuilder extends
    */
   com.google.protobuf.ByteString
       getTransactionHistoryBytes();
+
+  /**
+   * <code>string signature = 2;</code>
+   * @return The signature.
+   */
+  java.lang.String getSignature();
+  /**
+   * <code>string signature = 2;</code>
+   * @return The bytes for signature.
+   */
+  com.google.protobuf.ByteString
+      getSignatureBytes();
 }

@@ -8,26 +8,29 @@ public interface checkAccountResponseOrBuilder extends
     com.google.protobuf.MessageOrBuilder {
 
   /**
-   * <code>string balance = 1;</code>
-   * @return The balance.
+   * <code>.pt.tecnico.BFTB.bank.grpc.checkAccountResMsg msg_response = 1;</code>
+   * @return Whether the msgResponse field is set.
    */
-  java.lang.String getBalance();
+  boolean hasMsgResponse();
   /**
-   * <code>string balance = 1;</code>
-   * @return The bytes for balance.
+   * <code>.pt.tecnico.BFTB.bank.grpc.checkAccountResMsg msg_response = 1;</code>
+   * @return The msgResponse.
    */
-  com.google.protobuf.ByteString
-      getBalanceBytes();
+  pt.tecnico.BFTB.bank.grpc.checkAccountResMsg getMsgResponse();
+  /**
+   * <code>.pt.tecnico.BFTB.bank.grpc.checkAccountResMsg msg_response = 1;</code>
+   */
+  pt.tecnico.BFTB.bank.grpc.checkAccountResMsgOrBuilder getMsgResponseOrBuilder();
 
   /**
-   * <code>string pendingTransactions = 2;</code>
-   * @return The pendingTransactions.
+   * <code>string signature = 2;</code>
+   * @return The signature.
    */
-  java.lang.String getPendingTransactions();
+  java.lang.String getSignature();
   /**
-   * <code>string pendingTransactions = 2;</code>
-   * @return The bytes for pendingTransactions.
+   * <code>string signature = 2;</code>
+   * @return The bytes for signature.
    */
   com.google.protobuf.ByteString
-      getPendingTransactionsBytes();
+      getSignatureBytes();
 }

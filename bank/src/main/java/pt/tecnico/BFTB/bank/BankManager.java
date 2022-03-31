@@ -36,9 +36,8 @@ public class BankManager {
      * @throws AccountDoesntExistException
      */
   
-    public synchronized int checkBalance(BankData db, PublicKey key) throws SQLException, AccountDoesntExistException {
-        String keyb64 = CryptoHelper.encodeToBase64(key.getEncoded());
-        return db.getBalance(keyb64);
+    public synchronized int checkBalance(BankData db, String key) throws SQLException, AccountDoesntExistException {
+        return db.getBalance(key);
     }
 
     /**
@@ -73,9 +72,8 @@ public class BankManager {
      * @throws SQLException
      * @throws AccountAlreadyExistsException
      */
-    public synchronized void openAccount(BankData db, String user, PublicKey key) throws SQLException, AccountAlreadyExistsException {
-        String keyb64 = CryptoHelper.encodeToBase64(key.getEncoded());
-        db.createAccount(keyb64, user, 500);
+    public synchronized void openAccount(BankData db, String user, String key) throws SQLException, AccountAlreadyExistsException {
+        db.createAccount(key, user, 500);
     }
 
 
@@ -87,12 +85,12 @@ public class BankManager {
      * @throws SQLException
      * @throws AccountDoesntExistException
      */
-    public synchronized List<Transaction> checkTransactions(BankData db, PublicKey key) throws SQLException, AccountDoesntExistException {
-        String keyb64 = CryptoHelper.encodeToBase64(key.getEncoded());
-        if (!db.checkIfAccountExists(keyb64)) {
-            throw new AccountDoesntExistException(keyb64);
+    public synchronized List<Transaction> checkTransactions(BankData db, String key) throws SQLException, AccountDoesntExistException {
+
+        if (!db.checkIfAccountExists(key)) {
+            throw new AccountDoesntExistException(key);
         }
-        return db.getTransactionHistory(keyb64);
+        return db.getTransactionHistory(key);
     }
 
     /**
@@ -107,12 +105,11 @@ public class BankManager {
      * @throws InsufficientBalanceException
      */
 
-    public synchronized List<Transaction> checkTransactions(PublicKey key) {
-        BankAccount bankAccount = bankAccounts.get(key);
-        return bankAccount.getTransactionHistory();
+
 
     public synchronized void checkIfCanReceive(BankData db, PublicKey key, Transaction transaction) throws SQLException, 
             AccountDoesntExistException, TransactionAlreadyCompletedException, AccountPermissionException, InsufficientBalanceException {
+
         if (transaction.getStatus() != 0) {
             throw new TransactionAlreadyCompletedException(transaction.getId());
         }
@@ -136,7 +133,7 @@ public class BankManager {
      * @throws InsufficientBalanceException
      * @throws AccountPermissionException
      * @throws TransactionAlreadyCompletedException
-     */
+        */
 
     public synchronized int receiveAmount(BankData db, PublicKey key, String transactionId) throws SQLException,
             TransactionDoesntExistException, AccountDoesntExistException, TransactionAlreadyCompletedException, AccountPermissionException, InsufficientBalanceException {

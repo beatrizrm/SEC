@@ -30,6 +30,7 @@ import static io.grpc.Status.UNKNOWN;
 import static io.grpc.Status.PERMISSION_DENIED;
 
 public class BankServiceImpl extends BankServiceGrpc.BankServiceImplBase{
+
     String dbUrl;
     String dbUser;
     String dbPw;
@@ -37,14 +38,17 @@ public class BankServiceImpl extends BankServiceGrpc.BankServiceImplBase{
     private  BankManager bankAccounts;
 
     public BankServiceImpl(String dbName, String dbUser, String dbPw) throws IOException {
-        this.dbUrl = "jdbc:postgresql:" + dbName;
-        this.dbUser = dbUser;
-        this.dbPw = dbPw;
+        this.dbUrl = "jdbc:postgresql:" + "//localhost:5432/BankData";
+        this.dbUser = "postgres";
+        this.dbPw = "tomas123";
         this.bankAccounts = new BankManager();
     }
 
     @Override
     public void openAccount(openAccountRequest request, StreamObserver<openAccountResponse> responseObserver) {
+
+        System.out.println("estou na funcao open acount");
+
 
         String key = request.getKey();
         String user = request.getUser();
@@ -57,6 +61,7 @@ public class BankServiceImpl extends BankServiceGrpc.BankServiceImplBase{
 
         BankData db = new BankData();
         int status = 0;
+
         try {
             db.connect(dbUrl, dbUser, dbPw);
             bankAccounts.openAccount(db, user, key);
@@ -78,7 +83,9 @@ public class BankServiceImpl extends BankServiceGrpc.BankServiceImplBase{
         // sign message so client knows that was server who send it
         String signature = CryptoHelper.encodeToBase64(CryptoHelper.signMessage(serverKey,status1.toByteArray()));
 
+        System.out.println("estou aqui para mandar a resposta");
         openAccountResponse response = openAccountResponse.newBuilder().setStatus(status1).setSignature(signature).build();
+        System.out.println(response.toString());
         responseObserver.onNext(response);
         responseObserver.onCompleted();
 
@@ -130,6 +137,7 @@ public class BankServiceImpl extends BankServiceGrpc.BankServiceImplBase{
             Transaction transaction = new Transaction(0, msg.getSource(), msg.getDestination(), 0, Integer.parseInt(amount), 0, timeStamp);
             bankAccounts.addTransactionHistory(db, transaction);
             db.commit();
+            status = 1;
         } catch (AccountDoesntExistException e) {
             responseObserver.onError(NOT_FOUND.withDescription("sendAmount: " + e.getMessage()).asRuntimeException());
             db.rollback();
@@ -146,6 +154,8 @@ public class BankServiceImpl extends BankServiceGrpc.BankServiceImplBase{
         } finally {
             db.closeConnection();
         }
+
+        Status status1 = Status.newBuilder().setStatus(status).build();
 
         // sign message so client knows that was server who send it
         PrivateKey serverKey = CryptoHelper.readRSAPrivateKey(CryptoHelper.private_path + "/server.priv");
@@ -174,8 +184,8 @@ public class BankServiceImpl extends BankServiceGrpc.BankServiceImplBase{
         List<Transaction> transactionHistory = null;
         try {
             db.connect(dbUrl, dbUser, dbPw);
-            balance = String.valueOf(bankAccounts.checkBalance(db, key));
-            transactionHistory = bankAccounts.checkTransactions(db, key);
+            balance = String.valueOf(bankAccounts.checkBalance(db, key_string));
+            transactionHistory = bankAccounts.checkTransactions(db, key_string);
         } catch (AccountDoesntExistException e) {
             responseObserver.onError(NOT_FOUND.withDescription("checkAccount: " + e.getMessage()).asRuntimeException());
             return;
@@ -218,7 +228,7 @@ public class BankServiceImpl extends BankServiceGrpc.BankServiceImplBase{
         String transactionID = msg.getTransactionId();
 
         //verify signature
-        if (!CryptoHelper.verifySignature(msg.toByteArray(),request.getSignature(),CryptoHelper.publicKeyFromBase64(key))) {
+        if (!CryptoHelper.verifySignature(msg.toByteArray(),signature,CryptoHelper.publicKeyFromBase64(key))) {
             responseObserver.onError(
                     INVALID_ARGUMENT.withDescription("sendAmount: Signature not verified").asRuntimeException());
             responseObserver.onCompleted();
@@ -241,8 +251,9 @@ public class BankServiceImpl extends BankServiceGrpc.BankServiceImplBase{
         try {
             db.connect(dbUrl, dbUser, dbPw);
             db.beginTransaction();
-            status = bankAccounts.receiveAmount(db, key, transactionID);
+            status = bankAccounts.receiveAmount(db, CryptoHelper.publicKeyFromBase64(key), transactionID);
             db.commit();
+            status = 1;
         } catch (AccountDoesntExistException | TransactionDoesntExistException e) {
             responseObserver.onError(NOT_FOUND.withDescription("receiveAmount: " + e.getMessage()).asRuntimeException());
             db.rollback();
@@ -264,7 +275,6 @@ public class BankServiceImpl extends BankServiceGrpc.BankServiceImplBase{
             db.closeConnection();
         }
 
-        int status = bankAccounts.receiveAmount(CryptoHelper.publicKeyFromBase64(key), transactionID);
 
         Status status1 = Status.newBuilder().setStatus(status).build();
         PrivateKey serverKey = CryptoHelper.readRSAPrivateKey(CryptoHelper.private_path + "/server.priv");
@@ -295,7 +305,7 @@ public class BankServiceImpl extends BankServiceGrpc.BankServiceImplBase{
         List<Transaction> transactions = null;
         try {
             db.connect(dbUrl, dbUser, dbPw);
-            transactions = bankAccounts.checkTransactions(db, key);
+            transactions = bankAccounts.checkTransactions(db, key_string);
         } catch (AccountDoesntExistException e) {
             responseObserver.onError(NOT_FOUND.withDescription("audit: " + e.getMessage()).asRuntimeException());
             return;

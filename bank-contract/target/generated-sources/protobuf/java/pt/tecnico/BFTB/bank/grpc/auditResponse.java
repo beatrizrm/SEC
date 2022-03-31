@@ -17,6 +17,7 @@ private static final long serialVersionUID = 0L;
   }
   private auditResponse() {
     transactionHistory_ = "";
+    signature_ = "";
   }
 
   @java.lang.Override
@@ -53,6 +54,12 @@ private static final long serialVersionUID = 0L;
             java.lang.String s = input.readStringRequireUtf8();
 
             transactionHistory_ = s;
+            break;
+          }
+          case 18: {
+            java.lang.String s = input.readStringRequireUtf8();
+
+            signature_ = s;
             break;
           }
           default: {
@@ -125,6 +132,44 @@ private static final long serialVersionUID = 0L;
     }
   }
 
+  public static final int SIGNATURE_FIELD_NUMBER = 2;
+  private volatile java.lang.Object signature_;
+  /**
+   * <code>string signature = 2;</code>
+   * @return The signature.
+   */
+  @java.lang.Override
+  public java.lang.String getSignature() {
+    java.lang.Object ref = signature_;
+    if (ref instanceof java.lang.String) {
+      return (java.lang.String) ref;
+    } else {
+      com.google.protobuf.ByteString bs = 
+          (com.google.protobuf.ByteString) ref;
+      java.lang.String s = bs.toStringUtf8();
+      signature_ = s;
+      return s;
+    }
+  }
+  /**
+   * <code>string signature = 2;</code>
+   * @return The bytes for signature.
+   */
+  @java.lang.Override
+  public com.google.protobuf.ByteString
+      getSignatureBytes() {
+    java.lang.Object ref = signature_;
+    if (ref instanceof java.lang.String) {
+      com.google.protobuf.ByteString b = 
+          com.google.protobuf.ByteString.copyFromUtf8(
+              (java.lang.String) ref);
+      signature_ = b;
+      return b;
+    } else {
+      return (com.google.protobuf.ByteString) ref;
+    }
+  }
+
   private byte memoizedIsInitialized = -1;
   @java.lang.Override
   public final boolean isInitialized() {
@@ -142,6 +187,9 @@ private static final long serialVersionUID = 0L;
     if (!getTransactionHistoryBytes().isEmpty()) {
       com.google.protobuf.GeneratedMessageV3.writeString(output, 1, transactionHistory_);
     }
+    if (!getSignatureBytes().isEmpty()) {
+      com.google.protobuf.GeneratedMessageV3.writeString(output, 2, signature_);
+    }
     unknownFields.writeTo(output);
   }
 
@@ -153,6 +201,9 @@ private static final long serialVersionUID = 0L;
     size = 0;
     if (!getTransactionHistoryBytes().isEmpty()) {
       size += com.google.protobuf.GeneratedMessageV3.computeStringSize(1, transactionHistory_);
+    }
+    if (!getSignatureBytes().isEmpty()) {
+      size += com.google.protobuf.GeneratedMessageV3.computeStringSize(2, signature_);
     }
     size += unknownFields.getSerializedSize();
     memoizedSize = size;
@@ -171,6 +222,8 @@ private static final long serialVersionUID = 0L;
 
     if (!getTransactionHistory()
         .equals(other.getTransactionHistory())) return false;
+    if (!getSignature()
+        .equals(other.getSignature())) return false;
     if (!unknownFields.equals(other.unknownFields)) return false;
     return true;
   }
@@ -184,6 +237,8 @@ private static final long serialVersionUID = 0L;
     hash = (19 * hash) + getDescriptor().hashCode();
     hash = (37 * hash) + TRANSACTIONHISTORY_FIELD_NUMBER;
     hash = (53 * hash) + getTransactionHistory().hashCode();
+    hash = (37 * hash) + SIGNATURE_FIELD_NUMBER;
+    hash = (53 * hash) + getSignature().hashCode();
     hash = (29 * hash) + unknownFields.hashCode();
     memoizedHashCode = hash;
     return hash;
@@ -319,6 +374,8 @@ private static final long serialVersionUID = 0L;
       super.clear();
       transactionHistory_ = "";
 
+      signature_ = "";
+
       return this;
     }
 
@@ -346,6 +403,7 @@ private static final long serialVersionUID = 0L;
     public pt.tecnico.BFTB.bank.grpc.auditResponse buildPartial() {
       pt.tecnico.BFTB.bank.grpc.auditResponse result = new pt.tecnico.BFTB.bank.grpc.auditResponse(this);
       result.transactionHistory_ = transactionHistory_;
+      result.signature_ = signature_;
       onBuilt();
       return result;
     }
@@ -396,6 +454,10 @@ private static final long serialVersionUID = 0L;
       if (other == pt.tecnico.BFTB.bank.grpc.auditResponse.getDefaultInstance()) return this;
       if (!other.getTransactionHistory().isEmpty()) {
         transactionHistory_ = other.transactionHistory_;
+        onChanged();
+      }
+      if (!other.getSignature().isEmpty()) {
+        signature_ = other.signature_;
         onChanged();
       }
       this.mergeUnknownFields(other.unknownFields);
@@ -499,6 +561,82 @@ private static final long serialVersionUID = 0L;
   checkByteStringIsUtf8(value);
       
       transactionHistory_ = value;
+      onChanged();
+      return this;
+    }
+
+    private java.lang.Object signature_ = "";
+    /**
+     * <code>string signature = 2;</code>
+     * @return The signature.
+     */
+    public java.lang.String getSignature() {
+      java.lang.Object ref = signature_;
+      if (!(ref instanceof java.lang.String)) {
+        com.google.protobuf.ByteString bs =
+            (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        signature_ = s;
+        return s;
+      } else {
+        return (java.lang.String) ref;
+      }
+    }
+    /**
+     * <code>string signature = 2;</code>
+     * @return The bytes for signature.
+     */
+    public com.google.protobuf.ByteString
+        getSignatureBytes() {
+      java.lang.Object ref = signature_;
+      if (ref instanceof String) {
+        com.google.protobuf.ByteString b = 
+            com.google.protobuf.ByteString.copyFromUtf8(
+                (java.lang.String) ref);
+        signature_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+    /**
+     * <code>string signature = 2;</code>
+     * @param value The signature to set.
+     * @return This builder for chaining.
+     */
+    public Builder setSignature(
+        java.lang.String value) {
+      if (value == null) {
+    throw new NullPointerException();
+  }
+  
+      signature_ = value;
+      onChanged();
+      return this;
+    }
+    /**
+     * <code>string signature = 2;</code>
+     * @return This builder for chaining.
+     */
+    public Builder clearSignature() {
+      
+      signature_ = getDefaultInstance().getSignature();
+      onChanged();
+      return this;
+    }
+    /**
+     * <code>string signature = 2;</code>
+     * @param value The bytes for signature to set.
+     * @return This builder for chaining.
+     */
+    public Builder setSignatureBytes(
+        com.google.protobuf.ByteString value) {
+      if (value == null) {
+    throw new NullPointerException();
+  }
+  checkByteStringIsUtf8(value);
+      
+      signature_ = value;
       onChanged();
       return this;
     }
