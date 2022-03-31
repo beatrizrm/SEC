@@ -12,14 +12,9 @@ public class BankMain {
 
         System.out.println(BankMain.class.getSimpleName());
 
-        System.out.printf("Received %d arguments%n", args.length);
-        for (int i = 0; i < args.length; i++) {
-            System.out.printf("arg[%d] = %s%n", i, args[i]);
-        }
-
         try{
             // start gRPC server
-            final BindableService impl = new BankServiceImpl();
+            final BindableService impl = new BankServiceImpl(args[0], args[1], args[2]);
 
             // Create a new server to listen on port
             Server server = ServerBuilder.forPort(8080).addService(impl).build();

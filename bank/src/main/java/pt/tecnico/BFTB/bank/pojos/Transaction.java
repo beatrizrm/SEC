@@ -96,6 +96,6 @@ public class Transaction {
         }
         return " Transaction{ "+ id + "/ " + source + ", "+ destination + "/ "+ depOrWith + amount +
                 "/ " + status + "/ " + timeStamp +
-                '}';
+                " }";
     }
 }
