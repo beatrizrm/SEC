@@ -122,6 +122,12 @@ public class BankServiceImpl extends BankServiceGrpc.BankServiceImplBase{
             return;
         }
 
+        if (msg.getSource().equals(msg.getDestination())) {
+            responseObserver.onError(
+                    INVALID_ARGUMENT.withDescription("sendAmount: Source and destination cannot be the same!").asRuntimeException());
+            return;
+        }
+
         if (amount == null || amount.isBlank() || Integer.parseInt(amount) <= 0) {
             responseObserver.onError(
                     INVALID_ARGUMENT.withDescription("sendAmount: Amount cannot be empty and must be greater than 0!").asRuntimeException());
@@ -198,10 +204,11 @@ public class BankServiceImpl extends BankServiceGrpc.BankServiceImplBase{
         }
 
         String pendingTransactions = "";
-
+        String newline = ""; 
         for(Transaction temp: transactionHistory){
             if(temp.getStatus() == 0){
-                pendingTransactions += temp.toString();
+                pendingTransactions += newline + temp.toString();
+                newline = "\n";
             }
         }
 

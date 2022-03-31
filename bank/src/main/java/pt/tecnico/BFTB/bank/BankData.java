@@ -188,21 +188,22 @@ public class BankData {
     }
 
     public List<Transaction> getTransactionHistory(String key) throws SQLException {
-        try (PreparedStatement ps = db.prepareStatement("SELECT th.transaction_id, ti.source, ti.destination, "
-                + "th.sign, ti.amount, ti.status, ti.ts FROM transaction_history th JOIN transaction_info ti "
-                + "ON th.transaction_id = ti.transaction_id AND th.public_key = ? ORDER BY th.transaction_id")) {    
+        try (PreparedStatement ps = db.prepareStatement("SELECT th.transaction_id, ti.source, src.username as sourceuser, "
+                + "ti.destination, dst.username as destinationUser, th.sign, ti.amount, ti.status, ti.ts FROM transaction_history th "
+                + "JOIN transaction_info ti ON th.transaction_id = ti.transaction_id JOIN account src ON src.public_key = ti.source "
+                + "JOIN account dst ON dst.public_key = ti.destination AND th.public_key = ? ORDER BY th.transaction_id")) {    
             List<Transaction> transactions = new ArrayList<Transaction>();
             ps.setString(1, key);
             ResultSet rs = ps.executeQuery();
             while (rs.next()) {
                 Transaction trans = new Transaction(
                     rs.getInt(1),       // id
-                    rs.getString(2),    // source
-                    rs.getString(3),    // destination
-                    rs.getInt(4),       // sign
-                    rs.getInt(5),       // amount
-                    rs.getInt(6),       // status
-                    rs.getString(7)     // timestamp
+                    rs.getString(3),    // source
+                    rs.getString(5),    // destination
+                    rs.getInt(6),       // sign
+                    rs.getInt(7),       // amount
+                    rs.getInt(8),       // status
+                    rs.getString(9)     // timestamp
                 );
                 transactions.add(trans);
             }
