@@ -38,9 +38,9 @@ public class BankServiceImpl extends BankServiceGrpc.BankServiceImplBase{
     private  BankManager bankAccounts;
 
     public BankServiceImpl(String dbName, String dbUser, String dbPw) throws IOException {
-        this.dbUrl = "jdbc:postgresql:" + "//localhost:5432/BankData";
-        this.dbUser = "postgres";
-        this.dbPw = "tomas123";
+        this.dbUrl = "jdbc:postgresql:" + dbName;
+        this.dbUser = dbUser;
+        this.dbPw = dbPw;
         this.bankAccounts = new BankManager();
     }
 

@@ -109,11 +109,10 @@ public class BankManager {
 
     public synchronized void checkIfCanReceive(BankData db, PublicKey key, Transaction transaction) throws SQLException, 
             AccountDoesntExistException, TransactionAlreadyCompletedException, AccountPermissionException, InsufficientBalanceException {
-
         if (transaction.getStatus() != 0) {
             throw new TransactionAlreadyCompletedException(transaction.getId());
         }
-        if (transaction.getDestination() != CryptoHelper.encodeToBase64(key.getEncoded())) {
+        if (!transaction.getDestination().equals(CryptoHelper.encodeToBase64(key.getEncoded()))) {
             throw new AccountPermissionException();
         }
         if (transaction.getAmount() > db.getBalance(transaction.getSource())) {
