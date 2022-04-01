@@ -10,8 +10,8 @@ import java.util.Base64;
 
 public class CryptoHelper {
 
-    public static final String pki_path = "C:\\Users\\Diogo\\Downloads\\BFTB\\keys\\pki";
-    public static final String private_path = "C:\\Users\\Diogo\\Downloads\\BFTB\\keys\\private";
+    public static final String pki_path = "../keys/pki";
+    public static final String private_path = "../keys/private";
 
     public static KeyPair generate_RSA_keyPair(){
         try  {

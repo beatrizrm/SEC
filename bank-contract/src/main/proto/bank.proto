@@ -12,9 +12,20 @@ message Status {
   int32 status = 1;
 }
 
-message openAccountRequest {
-  string user = 1;
+message checkStatusRequest {
+  string requestId = 1;
   string key = 2;
+}
+
+message checkStatusResponse {
+  Status status = 1;
+  string signature = 2;
+}
+
+message openAccountRequest {
+  string requestId = 1;
+  string user = 2;
+  string key = 3;
 }
 
 message openAccountResponse {
@@ -83,4 +94,5 @@ service BankService {
   rpc checkAccount(checkAccountRequest) returns (checkAccountResponse);
   rpc receiveAmount(receiveAmountRequest) returns (receiveAmountResponse);
   rpc audit(auditRequest) returns (auditResponse);
+  rpc checkStatus(checkStatusRequest) returns (checkStatusResponse);
 }

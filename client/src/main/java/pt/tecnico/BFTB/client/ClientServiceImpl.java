@@ -2,6 +2,9 @@ package pt.tecnico.BFTB.client;
 
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
+import io.grpc.Status;
+import io.grpc.StatusRuntimeException;
+import io.grpc.Status.Code;
 import pt.tecnico.BFTB.bank.grpc.*;
 import pt.tecnico.BFTB.bank.grpc.BankServiceGrpc.BankServiceBlockingStub;
 import pt.tecnico.BFTB.client.crypto.CryptoHelper;
@@ -12,6 +15,8 @@ import java.security.KeyPair;
 import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.util.Objects;
+import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
 public class ClientServiceImpl {
 
@@ -22,6 +27,7 @@ public class ClientServiceImpl {
     private KeyPair clientKeys;
     private String user;
     private PublicKey server_pubkey;
+    private int timeoutMs;
 
 
     // Initialize all inner variables and checks their correctness
@@ -31,6 +37,7 @@ public class ClientServiceImpl {
         _channel = ManagedChannelBuilder.forAddress(_BankHost, _BankPort).usePlaintext().build();
         _stub = BankServiceGrpc.newBlockingStub(_channel);
         this.server_pubkey = CryptoHelper.readRSAPublicKey(CryptoHelper.pki_path + "/server.pub");
+        timeoutMs = 300; // FIXME
     }
 
     // Checks if the hub host name is valid and saves it
@@ -58,8 +65,43 @@ public class ClientServiceImpl {
         return _BankPort;
     }
 
+    private int prepareOpenAccountRequest(String _user) throws RuntimeException, IOException {
+        UUID reqId = UUID.randomUUID();
+        int retries = 0, status = 0;
+
+        try {
+            status = openAccountRequest(_user, reqId);
+        } catch (StatusRuntimeException e) {
+            Code error = e.getStatus().getCode();
+            if (error == Status.DEADLINE_EXCEEDED.getCode() || error == Status.CANCELLED.getCode()
+                    || error == Status.UNAVAILABLE.getCode()) {
+                retries = 3;
+            }
+            else {
+                throw e;
+            }
+        }
+
+        // If request fails due to timeout or connection error, ask server if request was completed
+        while (retries > 0) {
+            try {
+                System.out.println("Checking status of openAccount request... Retries left: " + (retries-1));
+                status = checkOperationStatus(reqId);
+            } catch (StatusRuntimeException e) {
+                Code error = e.getStatus().getCode();
+                if (error != Status.DEADLINE_EXCEEDED.getCode() || error != Status.CANCELLED.getCode()
+                        || error != Status.UNAVAILABLE.getCode()) {
+                    throw e;
+                }
+                System.out.println("e: " + e.getMessage());
+            }
+            retries--;
+        }
+        return status;
+    }
+
     // Sends a balance request and returns the balance (CHECK)
-    private int openAccountRequest(String _user) throws RuntimeException, IOException {
+    private int openAccountRequest(String _user, UUID reqId) throws RuntimeException, IOException {
 
         //gera as chaves do cliente
         clientKeys = CryptoHelper.generate_RSA_keyPair();
@@ -72,8 +114,8 @@ public class ClientServiceImpl {
         PublicKey client_pubkey = clientKeys.getPublic();
         String key = CryptoHelper.encodeToBase64(client_pubkey.getEncoded());
 
-        openAccountRequest request = openAccountRequest.newBuilder().setKey(key).setUser(_user).build();
-        openAccountResponse response = _stub.openAccount(request);
+        openAccountRequest request = openAccountRequest.newBuilder().setKey(key).setUser(_user).setRequestId(reqId.toString()).build();
+        openAccountResponse response = _stub.withDeadlineAfter(timeoutMs, TimeUnit.MILLISECONDS).openAccount(request);
 
         System.out.println("open account function server key: " + server_pubkey.toString());
 
@@ -83,7 +125,6 @@ public class ClientServiceImpl {
         }
 
         return response.getStatus().getStatus();
-
     }
 
     // Sends a balance request and returns the balance (CHECK)
@@ -179,7 +220,18 @@ public class ClientServiceImpl {
 
         return response.getStatus().getStatus();
 
+    }
 
+    private int checkOperationStatus(UUID reqId) throws RuntimeException {
+        String key = CryptoHelper.encodeToBase64(clientKeys.getPublic().getEncoded());
+
+        checkStatusRequest request = checkStatusRequest.newBuilder().setRequestId(reqId.toString()).setKey(key).build();
+        checkStatusResponse response = _stub.checkStatus(request);
+
+        if(!CryptoHelper.verifySignature(response.getStatus().toByteArray(),response.getSignature(),server_pubkey)) {
+            throw new RuntimeException("Invalid signature");
+        }
+        return response.getStatus().getStatus();
     }
 
     // Sends a terminates the service by closing the channel
@@ -195,10 +247,7 @@ public class ClientServiceImpl {
                 case "open_account":
                     if (args.length != 2)
                         throw new RuntimeException("Invalid command open_account");
-
-                    //
-
-                    int status = this.openAccountRequest(args[1]);
+                    int status = this.prepareOpenAccountRequest(args[1]);
                     System.out.println(status);
                     if(status == 1){
                         response = "OK";
