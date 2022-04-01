@@ -1,5 +1,6 @@
 package pt.tecnico.BFTB.bank.crypto;
 
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -32,6 +33,18 @@ public class CryptoHelper {
         KeyPair ret_keys = new KeyPair(pub_key,priv_key);
 
         return ret_keys;
+    }
+
+    public static boolean checkIfAccountExists(String user) {
+
+        File key_file = new File(CryptoHelper.pki_path + "/" + user + ".pub");
+
+        if (!key_file.exists()) {
+            return false;
+        }
+
+        return true;
+
     }
 
     public static PublicKey readRSAPublicKey(String publicKeyPath) {

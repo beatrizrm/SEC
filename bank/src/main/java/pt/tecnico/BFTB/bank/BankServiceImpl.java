@@ -318,7 +318,7 @@ public class BankServiceImpl extends BankServiceGrpc.BankServiceImplBase{
         if (key == null) {
             responseObserver.onError(
                     INVALID_ARGUMENT.withDescription("audit: Client Key cannot be empty!").asRuntimeException());
-            responseObserver.onCompleted();
+            return;
         }
 
         BankData db = new BankData();

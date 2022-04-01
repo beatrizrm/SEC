@@ -35,7 +35,7 @@ public class CheckAccountIT extends BaseIT {
         KeyPair keyPairDiogo = CryptoHelper.generate_RSA_keyPair();
 
         openAccountRequest openAccRequest = openAccountRequest.newBuilder().setUser("Diogo").setKey(CryptoHelper.encodeToBase64(keyPairDiogo.getPublic().getEncoded())).build();
-        openAccountResponse openAccResponse = frontend.openAccount(openAccRequest);
+        frontend.openAccount(openAccRequest);
 
         checkAccountRequest request = checkAccountRequest.newBuilder().setKey(CryptoHelper.encodeToBase64(keyPairDiogo.getPublic().getEncoded())).build();
         checkAccountResponse response = frontend.checkAccount(request);
@@ -47,10 +47,9 @@ public class CheckAccountIT extends BaseIT {
         KeyPair keyPairDiogo = CryptoHelper.generate_RSA_keyPair();
 
         openAccountRequest openAccRequest = openAccountRequest.newBuilder().setUser("Diogo").setKey(CryptoHelper.encodeToBase64(keyPairDiogo.getPublic().getEncoded())).build();
-        openAccountResponse openAccResponse = frontend.openAccount(openAccRequest);
+        frontend.openAccount(openAccRequest);
 
         checkAccountRequest request = checkAccountRequest.newBuilder().setKey("dsfdgdfgdfgdfgdfgs").build();
-        checkAccountResponse response = frontend.checkAccount(request);
-        assertEquals(NOT_FOUND.getCode(), assertThrows(StatusRuntimeException.class, () -> frontend.checkAccount(request)).getStatus().getCode());
+        assertEquals(INVALID_ARGUMENT.getCode(), assertThrows(StatusRuntimeException.class, () -> frontend.checkAccount(request)).getStatus().getCode());
     }
 }
