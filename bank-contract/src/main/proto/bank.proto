@@ -43,15 +43,15 @@ message auditResponse {
 }
 
 message receiveAmountContent {
-  string key = 1;
-  string transactionId = 2;
+  string requestId = 1;
+  string key = 2;
+  string transactionId = 3;
 }
 
 message receiveAmountRequest {
   receiveAmountContent msg = 1;
   string signature = 2;
 }
-
 
 message receiveAmountResponse {
   Status status = 1;
@@ -73,9 +73,10 @@ message checkAccountResponse {
 }
 
 message sendAmountContent {
-  string source = 1;
-  string destination = 2;
-  string amount = 3;
+  string requestId = 1;
+  string source = 2;
+  string destination = 3;
+  string amount = 4;
 }
 
 message sendAmountRequest {

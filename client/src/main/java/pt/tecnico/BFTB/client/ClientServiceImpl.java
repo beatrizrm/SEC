@@ -37,7 +37,7 @@ public class ClientServiceImpl {
         _channel = ManagedChannelBuilder.forAddress(_BankHost, _BankPort).usePlaintext().build();
         _stub = BankServiceGrpc.newBlockingStub(_channel);
         this.server_pubkey = CryptoHelper.readRSAPublicKey(CryptoHelper.pki_path + "/server.pub");
-        timeoutMs = 300; // FIXME
+        timeoutMs = 300;
     }
 
     // Checks if the hub host name is valid and saves it
@@ -67,7 +67,7 @@ public class ClientServiceImpl {
 
     private int prepareOpenAccountRequest(String _user) throws RuntimeException, IOException {
         UUID reqId = UUID.randomUUID();
-        int retries = 0, status = 0;
+        int retries = 0, status = -1;
 
         try {
             status = openAccountRequest(_user, reqId);
@@ -87,13 +87,13 @@ public class ClientServiceImpl {
             try {
                 System.out.println("Checking status of openAccount request... Retries left: " + (retries-1));
                 status = checkOperationStatus(reqId);
+                retries = 0;
             } catch (StatusRuntimeException e) {
                 Code error = e.getStatus().getCode();
-                if (error != Status.DEADLINE_EXCEEDED.getCode() || error != Status.CANCELLED.getCode()
-                        || error != Status.UNAVAILABLE.getCode()) {
+                if (!(error == Status.DEADLINE_EXCEEDED.getCode() || error == Status.CANCELLED.getCode()
+                        || error == Status.UNAVAILABLE.getCode())) {
                     throw e;
                 }
-                System.out.println("e: " + e.getMessage());
             }
             retries--;
         }
@@ -114,7 +114,7 @@ public class ClientServiceImpl {
         PublicKey client_pubkey = clientKeys.getPublic();
         String key = CryptoHelper.encodeToBase64(client_pubkey.getEncoded());
 
-        openAccountRequest request = openAccountRequest.newBuilder().setKey(key).setUser(_user).setRequestId(reqId.toString()).build();
+        openAccountRequest request = openAccountRequest.newBuilder().setRequestId(reqId.toString()).setKey(key).setUser(_user).build();
         openAccountResponse response = _stub.withDeadlineAfter(timeoutMs, TimeUnit.MILLISECONDS).openAccount(request);
 
         System.out.println("open account function server key: " + server_pubkey.toString());
@@ -146,21 +146,57 @@ public class ClientServiceImpl {
 
     }
 
+    private int prepareReceiveAmountRequest(String _userKey, String _transactionId) throws RuntimeException, IOException {
+        UUID reqId = UUID.randomUUID();
+        int retries = 0, status = -1;
+
+        try {
+            status = receiveAmountRequest(_userKey, _transactionId, reqId);
+        } catch (StatusRuntimeException e) {
+            Code error = e.getStatus().getCode();
+            if (error == Status.DEADLINE_EXCEEDED.getCode() || error == Status.CANCELLED.getCode()
+                    || error == Status.UNAVAILABLE.getCode()) {
+                retries = 3;
+            }
+            else {
+                throw e;
+            }
+        }
+
+        // If request fails due to timeout or connection error, ask server if request was completed
+        while (retries > 0) {
+            try {
+                System.out.println("Checking status of receiveAmount request... Retries left: " + (retries-1));
+                status = checkOperationStatus(reqId);
+                retries = 0;
+            } catch (StatusRuntimeException e) {
+                Code error = e.getStatus().getCode();
+                if (!(error == Status.DEADLINE_EXCEEDED.getCode() || error == Status.CANCELLED.getCode()
+                        || error == Status.UNAVAILABLE.getCode())) {
+                    throw e;
+                }
+            }
+            retries--;
+        }
+        return status;
+    }
+
     // Sends a balance request and returns the balance (Check)
-    private int receiveAmountRequest(String _userKey, String _transactionId) throws RuntimeException {
+    private int receiveAmountRequest(String _userKey, String _transactionId, UUID reqId) throws RuntimeException {
 
         //get the pretend pubKey
         PublicKey key = CryptoHelper.readRSAPublicKey(CryptoHelper.pki_path+"/" + _userKey + ".pub");
         String key_string = CryptoHelper.encodeToBase64(key.getEncoded());
 
         //construct the message
-        receiveAmountContent msg =  receiveAmountContent.newBuilder().setKey(key_string).setTransactionId(_transactionId).build();
+        receiveAmountContent msg = receiveAmountContent.newBuilder()
+                                    .setRequestId(reqId.toString()).setKey(key_string).setTransactionId(_transactionId).build();
 
         //sign the message
         String signature = CryptoHelper.encodeToBase64(CryptoHelper.signMessage(clientKeys.getPrivate(),msg.toByteArray()));
 
         receiveAmountRequest request = receiveAmountRequest.newBuilder().setMsg(msg).setSignature(signature).build();
-        receiveAmountResponse response = _stub.receiveAmount(request);
+        receiveAmountResponse response = _stub.withDeadlineAfter(timeoutMs, TimeUnit.MILLISECONDS).receiveAmount(request);
 
         //verify server signature
         if(!CryptoHelper.verifySignature(response.getStatus().toByteArray(),response.getSignature(),server_pubkey)) {
@@ -189,12 +225,45 @@ public class ClientServiceImpl {
         }
 
         return msg.getBalance() + msg.getPendingTransactions();
+    }
 
+    private int prepareSendAmountRequest(String amount, String source, String dest) throws RuntimeException, IOException {
+        UUID reqId = UUID.randomUUID();
+        int retries = 0, status = -1;
 
+        try {
+            status = sendAmountRequest(amount, source, dest, reqId);
+        } catch (StatusRuntimeException e) {
+            Code error = e.getStatus().getCode();
+            if (error == Status.DEADLINE_EXCEEDED.getCode() || error == Status.CANCELLED.getCode()
+                    || error == Status.UNAVAILABLE.getCode()) {
+                retries = 3;
+            }
+            else {
+                throw e;
+            }
+        }
+
+        // If request fails due to timeout or connection error, ask server if request was completed
+        while (retries > 0) {
+            try {
+                System.out.println("Checking status of sendAmount request... Retries left: " + (retries-1));
+                status = checkOperationStatus(reqId);
+                retries = 0;
+            } catch (StatusRuntimeException e) {
+                Code error = e.getStatus().getCode();
+                if (!(error == Status.DEADLINE_EXCEEDED.getCode() || error == Status.CANCELLED.getCode()
+                        || error == Status.UNAVAILABLE.getCode())) {
+                    throw e;
+                }
+            }
+            retries--;
+        }
+        return status;
     }
 
     // Sends an amount request and returns the balance (CHECK)
-    private int sendAmountRequest(String amount, String source, String dest) throws RuntimeException {
+    private int sendAmountRequest(String amount, String source, String dest, UUID reqId) throws RuntimeException {
 
         int amountInt = Integer.parseInt(amount);
         if (amountInt < 0)
@@ -206,12 +275,13 @@ public class ClientServiceImpl {
         String destiny_key = CryptoHelper.encodeToBase64(dst_key.getEncoded());
 
         //create the msg and signature
-        sendAmountContent msg = sendAmountContent.newBuilder().setAmount(amount).setDestination(destiny_key).setSource(source_key).build();
+        sendAmountContent msg = sendAmountContent.newBuilder().setRequestId(reqId.toString()).setAmount(amount)
+                                                    .setDestination(destiny_key).setSource(source_key).build();
         String signature = CryptoHelper.encodeToBase64(CryptoHelper.signMessage(clientKeys.getPrivate(),msg.toByteArray()));
 
         //send the request for the server
         sendAmountRequest request = sendAmountRequest.newBuilder().setMessage(msg).setSignature(signature).build();
-        sendAmountResponse response = _stub.sendAmount(request);
+        sendAmountResponse response = _stub.withDeadlineAfter(timeoutMs, TimeUnit.MILLISECONDS).sendAmount(request);
 
         //verify server signature
         if(!CryptoHelper.verifySignature(response.getStatus().toByteArray(),response.getSignature(),server_pubkey)) {
@@ -219,14 +289,13 @@ public class ClientServiceImpl {
         }
 
         return response.getStatus().getStatus();
-
     }
 
     private int checkOperationStatus(UUID reqId) throws RuntimeException {
         String key = CryptoHelper.encodeToBase64(clientKeys.getPublic().getEncoded());
 
         checkStatusRequest request = checkStatusRequest.newBuilder().setRequestId(reqId.toString()).setKey(key).build();
-        checkStatusResponse response = _stub.checkStatus(request);
+        checkStatusResponse response = _stub.withDeadlineAfter(timeoutMs, TimeUnit.MILLISECONDS).checkStatus(request);
 
         if(!CryptoHelper.verifySignature(response.getStatus().toByteArray(),response.getSignature(),server_pubkey)) {
             throw new RuntimeException("Invalid signature");
@@ -251,6 +320,8 @@ public class ClientServiceImpl {
                     System.out.println(status);
                     if(status == 1){
                         response = "OK";
+                    } else if (status == -1) {
+                        response = "Couldn't confirm if operation was completed";
                     } else {
                         response = "Couldn't open account";
                     }
@@ -258,9 +329,11 @@ public class ClientServiceImpl {
                 case "send_amount":
                     if (args.length != 4)
                         throw new RuntimeException("Invalid command send_amount");
-                    int status2 = sendAmountRequest(args[1], args[2], args[3]);
+                    int status2 = prepareSendAmountRequest(args[1], args[2], args[3]);
                     if(status2 == 1){
                         response = "OK";
+                    } else if (status2 == -1) {
+                        response = "Couldn't confirm if operation was completed";
                     } else {
                         response = "Couldn't send amount";
                     }
@@ -274,9 +347,11 @@ public class ClientServiceImpl {
                     if (args.length != 3) {
                         throw new RuntimeException("Invalid command receive_amount");
                     }
-                    int status3 = receiveAmountRequest(args[1], args[2]);
+                    int status3 = prepareReceiveAmountRequest(args[1], args[2]);
                     if(status3 == 1){
                         response = "OK";
+                    } else if (status3 == -1) {
+                        response = "Couldn't confirm if operation was completed";
                     } else {
                         response = "Couldn't receive amount";
                     }

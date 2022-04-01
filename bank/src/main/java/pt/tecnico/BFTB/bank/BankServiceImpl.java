@@ -76,6 +76,7 @@ public class BankServiceImpl extends BankServiceGrpc.BankServiceImplBase{
         } catch (SQLException e) {
             responseObserver.onError(UNKNOWN.withDescription("openAccount: Error connecting to database.").asRuntimeException());
             printError("openAccount", "DB error - " + e.getMessage());
+            bankAccounts.setOperationStatus(db, key, requestId, 0);
             return;
         } finally {
             db.closeConnection();
@@ -102,6 +103,7 @@ public class BankServiceImpl extends BankServiceGrpc.BankServiceImplBase{
         sendAmountContent msg = request.getMessage();
         PublicKey key_source = CryptoHelper.publicKeyFromBase64(msg.getSource());
         PublicKey key_destiny = CryptoHelper.publicKeyFromBase64(msg.getDestination());
+        String requestId = msg.getRequestId();
 
         //verify signature
         if (!CryptoHelper.verifySignature(msg.toByteArray(),request.getSignature(),key_source)) {
@@ -146,19 +148,23 @@ public class BankServiceImpl extends BankServiceGrpc.BankServiceImplBase{
             bankAccounts.checkIfTransactionPossible(db, key_source, key_destiny, Integer.parseInt(amount));
             Transaction transaction = new Transaction(0, msg.getSource(), msg.getDestination(), 0, Integer.parseInt(amount), 0, timeStamp);
             bankAccounts.addTransactionHistory(db, transaction);
+            bankAccounts.setOperationStatus(db, msg.getSource(), requestId, 1);
             db.commit();
             status = 1;
         } catch (AccountDoesntExistException e) {
             responseObserver.onError(NOT_FOUND.withDescription("sendAmount: " + e.getMessage()).asRuntimeException());
             db.rollback();
+            bankAccounts.setOperationStatus(db, msg.getSource(), requestId, 0);
             return;
         } catch (InsufficientBalanceException e) {
             responseObserver.onError(FAILED_PRECONDITION.withDescription("sendAmount: " + e.getMessage()).asRuntimeException());
             db.rollback();
+            bankAccounts.setOperationStatus(db, msg.getSource(), requestId, 0);
             return;
         } catch (SQLException e) {
             responseObserver.onError(ABORTED.withDescription("sendAmount: Error connecting to database.").asRuntimeException());
             printError("sendAmount", "DB error - " + e.getMessage());
+            bankAccounts.setOperationStatus(db, msg.getSource(), requestId, 0);
             db.rollback();
             return;
         } finally {
@@ -237,12 +243,13 @@ public class BankServiceImpl extends BankServiceGrpc.BankServiceImplBase{
         String key = msg.getKey();
         String signature = request.getSignature();
         String transactionID = msg.getTransactionId();
+        String requestId = msg.getRequestId();
 
         //verify signature
         if (!CryptoHelper.verifySignature(msg.toByteArray(),signature,CryptoHelper.publicKeyFromBase64(key))) {
             responseObserver.onError(
-                    INVALID_ARGUMENT.withDescription("sendAmount: Signature not verified").asRuntimeException());
-            responseObserver.onCompleted();
+                    INVALID_ARGUMENT.withDescription("receiveAmount: Signature not verified").asRuntimeException());
+            return;
         }
 
         if (key == null || key.isBlank()) {
@@ -262,37 +269,40 @@ public class BankServiceImpl extends BankServiceGrpc.BankServiceImplBase{
         try {
             db.connect(dbUrl, dbUser, dbPw);
             db.beginTransaction();
-            status = bankAccounts.receiveAmount(db, CryptoHelper.publicKeyFromBase64(key), transactionID);
+            bankAccounts.receiveAmount(db, CryptoHelper.publicKeyFromBase64(key), transactionID);
+            bankAccounts.setOperationStatus(db, key, requestId, 1);
             db.commit();
             status = 1;
         } catch (AccountDoesntExistException | TransactionDoesntExistException e) {
             responseObserver.onError(NOT_FOUND.withDescription("receiveAmount: " + e.getMessage()).asRuntimeException());
             db.rollback();
+            bankAccounts.setOperationStatus(db, key, requestId, 0);
             return;
         } catch (TransactionAlreadyCompletedException | InsufficientBalanceException e) {
             responseObserver.onError(FAILED_PRECONDITION.withDescription("receiveAmount: " + e.getMessage()).asRuntimeException());
             db.rollback();
+            bankAccounts.setOperationStatus(db, key, requestId, 0);
             return;
         } catch (AccountPermissionException e) {
             responseObserver.onError(PERMISSION_DENIED.withDescription("receiveAmount: " + "User isn't the destinatary of the transaction").asRuntimeException());
             db.rollback();
+            bankAccounts.setOperationStatus(db, key, requestId, 0);
             return;
         } catch (SQLException e) {
             responseObserver.onError(ABORTED.withDescription("receiveAmount: Error connecting to database.").asRuntimeException());
             printError("receiveAmount", "DB error - " + e.getMessage());
             db.rollback();
+            bankAccounts.setOperationStatus(db, key, requestId, 0);
             return;
         } finally {
             db.closeConnection();
         }
-
 
         Status status1 = Status.newBuilder().setStatus(status).build();
         PrivateKey serverKey = CryptoHelper.readRSAPrivateKey(CryptoHelper.private_path + "/server.priv");
 
         // sign message so client knows that was server who send it
         signature = CryptoHelper.encodeToBase64(CryptoHelper.signMessage(serverKey,status1.toByteArray()));
-
 
         receiveAmountResponse response = receiveAmountResponse.newBuilder().setStatus(status1).setSignature(signature).build();
         responseObserver.onNext(response);
