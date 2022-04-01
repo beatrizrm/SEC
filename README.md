@@ -62,11 +62,16 @@ cd bank
 mvn compile exec:java
 ```
 
-In the second one, run the tests:
+In the second one, start the tester:
 
-```
+```sh
+cd bank-tester
 mvn verify
 ```
+
+There are tests for the audit, checkAccount and openAccount requests (integrated with the others), but
+as we aren't able to create two clients in the same client app (for security purposes), tests for sendAmount and
+receiveAmount weren't made.
 
 ## Running the project
 
