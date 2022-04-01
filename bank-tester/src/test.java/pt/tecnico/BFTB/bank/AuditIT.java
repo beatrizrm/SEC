@@ -13,12 +13,14 @@ import pt.tecnico.BFTB.bank.crypto.CryptoHelper;
 import pt.tecnico.BFTB.bank.grpc.*;
 
 import java.security.KeyPair;
+import java.util.UUID;
 
 /**
  *
  * Class to test the balance request of Hub Service
  *
  */
+
 public class AuditIT extends BaseIT {
 
     private BankFrontend frontend;
@@ -31,7 +33,7 @@ public class AuditIT extends BaseIT {
     public void AuditOKTest() {
         KeyPair keyPairDiogo = CryptoHelper.generate_RSA_keyPair();
 
-        openAccountRequest openAccRequest = openAccountRequest.newBuilder().setUser("Diogo").setKey(CryptoHelper.encodeToBase64(keyPairDiogo.getPublic().getEncoded())).build();
+        openAccountRequest openAccRequest = openAccountRequest.newBuilder().setRequestId(UUID.randomUUID().toString()).setKey(CryptoHelper.encodeToBase64(keyPairDiogo.getPublic().getEncoded())).setUser("Diogo").build();
         openAccountResponse openAccResponse = frontend.openAccount(openAccRequest);
 
         auditRequest request = auditRequest.newBuilder().setKey(CryptoHelper.encodeToBase64(keyPairDiogo.getPublic().getEncoded())).build();
@@ -43,11 +45,10 @@ public class AuditIT extends BaseIT {
     public void AuditNOKTest() {
         KeyPair keyPairDiogo = CryptoHelper.generate_RSA_keyPair();
 
-        openAccountRequest openAccRequest = openAccountRequest.newBuilder().setUser("Diogo").setKey(CryptoHelper.encodeToBase64(keyPairDiogo.getPublic().getEncoded())).build();
-        openAccountResponse openAccResponse = frontend.openAccount(openAccRequest);
+        openAccountRequest openAccRequest = openAccountRequest.newBuilder().setRequestId(UUID.randomUUID().toString()).setKey(CryptoHelper.encodeToBase64(keyPairDiogo.getPublic().getEncoded())).setUser("Diogo").build();
+        frontend.openAccount(openAccRequest);
 
-        auditRequest request = auditRequest.newBuilder().setKey("dsfdgdfgdfgdfgdfgs").build();
-        auditResponse response = frontend.audit(request);
-        assertEquals(NOT_FOUND.getCode(), assertThrows(StatusRuntimeException.class, () -> frontend.audit(request)).getStatus().getCode());
+        auditRequest request = auditRequest.newBuilder().setKey("dsfdgdfgdfgdfgdfgs258340t3094g053jg034jgetgjdfgjdkjlfghndçjhçksfhtksrfdkhdfklhdlkhlkfsdhlkdhglkdklhdfkljh4t94hy0hr0hbr0h0rhr0gofghlksfhlkjfdhlkjdhfhkljdfkjlhdkljfhlkdfhlkdfhlkdfhldkfhlkjdfhildfhldifht4h49jhflihg").build();
+        assertEquals(INVALID_ARGUMENT.getCode(), assertThrows(StatusRuntimeException.class, () -> frontend.audit(request)).getStatus().getCode());
     }
 }

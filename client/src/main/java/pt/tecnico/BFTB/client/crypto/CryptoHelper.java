@@ -35,7 +35,6 @@ public class CryptoHelper {
     }
 
     public static boolean checkIfAccountExists(String user) {
-        new File(CryptoHelper.pki_path + "/" + user + ".pub").getParentFile().mkdirs();
         File key_file = new File(CryptoHelper.pki_path + "/" + user + ".pub");
 
         if (!key_file.exists()) {
