@@ -20,6 +20,7 @@ import java.security.PublicKey;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import static io.grpc.Status.INVALID_ARGUMENT;
 import static io.grpc.Status.FAILED_PRECONDITION;
@@ -52,6 +53,7 @@ public class BankServiceImpl extends BankServiceGrpc.BankServiceImplBase{
 
         String key = request.getKey();
         String user = request.getUser();
+        String requestId = request.getRequestId();
 
         if (key == null || key.isBlank()) {
             responseObserver.onError(
@@ -65,9 +67,11 @@ public class BankServiceImpl extends BankServiceGrpc.BankServiceImplBase{
         try {
             db.connect(dbUrl, dbUser, dbPw);
             bankAccounts.openAccount(db, user, key);
+            bankAccounts.setOperationStatus(db, key, requestId, 1);
             status = 1;
         } catch (AccountAlreadyExistsException e) {
             responseObserver.onError(ALREADY_EXISTS.withDescription("openAccount: " + e.getMessage()).asRuntimeException());
+            bankAccounts.setOperationStatus(db, key, requestId, 0);
             return;
         } catch (SQLException e) {
             responseObserver.onError(UNKNOWN.withDescription("openAccount: Error connecting to database.").asRuntimeException());
@@ -339,6 +343,45 @@ public class BankServiceImpl extends BankServiceGrpc.BankServiceImplBase{
         responseObserver.onNext(response);
         responseObserver.onCompleted();
 
+    }
+
+    @Override
+    public void checkStatus(checkStatusRequest request, StreamObserver<checkStatusResponse> responseObserver) {
+        String key = request.getKey();
+        String requestId = request.getRequestId();
+
+        if (key == null) {
+            responseObserver.onError(
+                    INVALID_ARGUMENT.withDescription("checkStatus: Client Key cannot be empty!").asRuntimeException());
+            return;
+        }
+        if (requestId == null) {
+            responseObserver.onError(
+                    INVALID_ARGUMENT.withDescription("checkStatus: Request id cannot be empty!").asRuntimeException());
+            return;
+        }
+
+        BankData db = new BankData();
+        int status = 0;
+        try {
+            db.connect(dbUrl, dbUser, dbPw);
+            status = bankAccounts.getOperationStatus(db, key, requestId);
+        } catch (SQLException e) {
+            responseObserver.onError(UNKNOWN.withDescription("checkStatus: Error connecting to database.").asRuntimeException());
+            printError("audit", "DB error - " + e.getMessage());
+            return;
+        } finally {
+            db.closeConnection();
+        }
+
+        Status resStatus = Status.newBuilder().setStatus(status).build();
+        PrivateKey serverKey = CryptoHelper.readRSAPrivateKey(CryptoHelper.private_path + "/server.priv");
+
+        String signature = CryptoHelper.encodeToBase64(CryptoHelper.signMessage(serverKey,resStatus.toByteArray()));
+
+        checkStatusResponse response = checkStatusResponse.newBuilder().setStatus(resStatus).setSignature(signature).build();
+        responseObserver.onNext(response);
+        responseObserver.onCompleted();
     }
 
     private void printError(String function, String message) {

@@ -210,4 +210,27 @@ public class BankData {
             return transactions;  
         }
     }
+
+    public void setOperationStatus(String key, String requestId, int status) throws SQLException {
+        try (PreparedStatement ps = db.prepareStatement("INSERT INTO operation_log VALUES (?, ?, ?)"
+                + "ON CONFLICT (public_key, request_id) DO UPDATE SET status = ?")) {
+            ps.setString(1, key);
+            ps.setString(2, requestId);
+            ps.setInt(3, status);
+            ps.setInt(4, status);
+            ps.executeUpdate();
+        }
+    }
+
+    public int getOperationStatus(String key, String requestId) throws SQLException {
+        try (PreparedStatement ps = db.prepareStatement("SELECT status FROM operation_log WHERE (public_key, request_id) = (?, ?)")) {
+            ps.setString(1, key);
+            ps.setString(2, requestId);
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                return rs.getInt(1);
+            }
+            return 0;
+        }
+    }
 }

@@ -170,4 +170,16 @@ public class BankManager {
     public synchronized void addAmount(BankData db, PublicKey key, String amount) throws SQLException, AccountDoesntExistException {
         db.confirmDeposit(CryptoHelper.encodeToBase64(key.getEncoded()), Integer.parseInt(amount));
     }
+
+    public synchronized void setOperationStatus(BankData db, String key, String requestId, int status) {
+        try {
+            db.setOperationStatus(key, requestId, status);
+        } catch (SQLException e) {
+            System.out.println("Error writing operation status to log: " + e.getMessage());
+        }
+    }
+
+    public synchronized int getOperationStatus(BankData db, String key, String requestId) throws SQLException {
+        return db.getOperationStatus(key, requestId);
+    }
 }
