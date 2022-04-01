@@ -185,6 +185,41 @@ public class ClientServiceImpl {
 
     }
 
+    private int prepareReceiveAmountRequest(String _userKey, String _transactionId) throws RuntimeException, IOException {
+        UUID reqId = UUID.randomUUID();
+        int retries = 0, status = -1;
+
+        try {
+            status = receiveAmountRequest(_userKey, _transactionId, reqId);
+        } catch (StatusRuntimeException e) {
+            Code error = e.getStatus().getCode();
+            if (error == Status.DEADLINE_EXCEEDED.getCode() || error == Status.CANCELLED.getCode()
+                    || error == Status.UNAVAILABLE.getCode()) {
+                retries = 3;
+            }
+            else {
+                throw e;
+            }
+        }
+
+        // If request fails due to timeout or connection error, ask server if request was completed
+        while (retries > 0) {
+            try {
+                System.out.println("Checking status of receiveAmount request... Retries left: " + (retries-1));
+                status = checkOperationStatus(reqId);
+                retries = 0;
+            } catch (StatusRuntimeException e) {
+                Code error = e.getStatus().getCode();
+                if (!(error == Status.DEADLINE_EXCEEDED.getCode() || error == Status.CANCELLED.getCode()
+                        || error == Status.UNAVAILABLE.getCode())) {
+                    throw e;
+                }
+            }
+            retries--;
+        }
+        return status;
+    }
+
     // Sends a balance request and returns the balance (Check)
     private int receiveAmountRequest(String _userKey, String _transactionId, UUID reqId) throws RuntimeException {
 
@@ -194,7 +229,7 @@ public class ClientServiceImpl {
 
         //construct the message
         receiveAmountContent msg = receiveAmountContent.newBuilder()
-                                    .setRequestId(reqId.toString()).setKey(key_string).setTransactionId(_transactionId).build();
+                .setRequestId(reqId.toString()).setKey(key_string).setTransactionId(_transactionId).build();
 
         //sign the message
         String signature = CryptoHelper.encodeToBase64(CryptoHelper.signMessage(clientKeys.getPrivate(),msg.toByteArray()));
@@ -367,9 +402,11 @@ public class ClientServiceImpl {
                     if (args.length != 3) {
                         throw new RuntimeException("Invalid command receive_amount");
                     }
-                    int status3 = receiveAmountRequest(args[1], args[2]);
+                    int status3 = prepareReceiveAmountRequest(args[1], args[2]);
                     if(status3 == 1){
                         response = "OK";
+                    } else if (status3 == -1) {
+                        response = "Couldn't confirm if operation was completed";
                     } else {
                         response = "Couldn't receive amount";
                     }
