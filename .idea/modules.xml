@@ -7,7 +7,6 @@
       <module fileurl="file://$PROJECT_DIR$/bank-contract/bank-contract.iml" filepath="$PROJECT_DIR$/bank-contract/bank-contract.iml" />
       <module fileurl="file://$PROJECT_DIR$/bank-tester/bank-tester.iml" filepath="$PROJECT_DIR$/bank-tester/bank-tester.iml" />
       <module fileurl="file://$PROJECT_DIR$/client/client.iml" filepath="$PROJECT_DIR$/client/client.iml" />
-      <module fileurl="file://$PROJECT_DIR$/client-tester/client-tester.iml" filepath="$PROJECT_DIR$/client-tester/client-tester.iml" />
     </modules>
   </component>
 </project>

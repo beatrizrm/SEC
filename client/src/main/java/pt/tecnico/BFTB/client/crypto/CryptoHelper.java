@@ -11,8 +11,8 @@ import java.util.Base64;
 
 public class CryptoHelper {
 
-    public static final String pki_path = "C:\\Users\\tomas\\IdeaProjects\\SEC_22\\keys\\pki";
-    public static final String private_path = "C:\\Users\\tomas\\IdeaProjects\\SEC_22\\keys\\private";
+    public static final String pki_path = "../keys/pki";
+    public static final String private_path = "../keys/private";
 
     public static KeyPair generate_RSA_keyPair(){
         try  {

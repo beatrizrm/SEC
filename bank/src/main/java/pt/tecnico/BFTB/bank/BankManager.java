@@ -109,11 +109,10 @@ public class BankManager {
 
     public synchronized void checkIfCanReceive(BankData db, PublicKey key, Transaction transaction) throws SQLException, 
             AccountDoesntExistException, TransactionAlreadyCompletedException, AccountPermissionException, InsufficientBalanceException {
-
         if (transaction.getStatus() != 0) {
             throw new TransactionAlreadyCompletedException(transaction.getId());
         }
-        if (transaction.getDestination() != CryptoHelper.encodeToBase64(key.getEncoded())) {
+        if (!transaction.getDestination().equals(CryptoHelper.encodeToBase64(key.getEncoded()))) {
             throw new AccountPermissionException();
         }
         if (transaction.getAmount() > db.getBalance(transaction.getSource())) {
@@ -170,5 +169,17 @@ public class BankManager {
 
     public synchronized void addAmount(BankData db, PublicKey key, String amount) throws SQLException, AccountDoesntExistException {
         db.confirmDeposit(CryptoHelper.encodeToBase64(key.getEncoded()), Integer.parseInt(amount));
+    }
+
+    public synchronized void setOperationStatus(BankData db, String key, String requestId, int status) {
+        try {
+            db.setOperationStatus(key, requestId, status);
+        } catch (SQLException e) {
+            System.out.println("Error writing operation status to log: " + e.getMessage());
+        }
+    }
+
+    public synchronized int getOperationStatus(BankData db, String key, String requestId) throws SQLException {
+        return db.getOperationStatus(key, requestId);
     }
 }

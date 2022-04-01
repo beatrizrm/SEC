@@ -1,6 +1,6 @@
 CREATE TABLE account (
 	public_key VARCHAR(1024),
-	user VARCHAR(50),
+	username VARCHAR(50),
 	balance INT,
 	CONSTRAINT pk_account PRIMARY KEY (public_key)
 );
@@ -24,4 +24,12 @@ CREATE TABLE transaction_history (
 	CONSTRAINT pk_transaction_history PRIMARY KEY (public_key, transaction_id),
 	CONSTRAINT fk_public_key FOREIGN KEY (public_key) references account(public_key),
 	CONSTRAINT fk_transaction_id FOREIGN KEY (transaction_id) references transaction_info(transaction_id)
+);
+
+CREATE TABLE operation_log (
+	public_key VARCHAR(1024),
+	request_id CHAR(36),
+	status INT,
+	CONSTRAINT pk_operation_log PRIMARY KEY (public_key, request_id),
+	CONSTRAINT fk_public_key FOREIGN KEY (public_key) references account(public_key)
 );

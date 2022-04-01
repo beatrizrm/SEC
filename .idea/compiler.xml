@@ -9,11 +9,13 @@
         <module name="bank-contract" />
         <module name="client" />
         <module name="bank" />
+        <module name="bank-tester" />
       </profile>
     </annotationProcessing>
     <bytecodeTargetLevel>
       <module name="bank" target="11" />
       <module name="bank-contract" target="11" />
+      <module name="bank-tester" target="11" />
       <module name="BFTB" target="11" />
       <module name="client" target="11" />
       <module name="client-contract" target="11" />
