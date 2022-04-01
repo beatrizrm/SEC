@@ -134,7 +134,7 @@ public class ClientServiceImpl {
         PublicKey key = CryptoHelper.readRSAPublicKey(CryptoHelper.pki_path+"/" + _userKey + ".pub");
         String key_string = CryptoHelper.encodeToBase64(key.getEncoded());
 
-        auditRequest request = auditRequest.newBuilder().setKey(_userKey).build();
+        auditRequest request = auditRequest.newBuilder().setKey(key_string).build();
         auditResponse response = _stub.audit(request);
 
         //verify server signature
