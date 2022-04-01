@@ -3,6 +3,7 @@
   <component name="Encoding">
     <file url="file://$PROJECT_DIR$/bank-contract/src/main/java" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/bank-contract/src/main/resources" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/bank-tester/src/main/java" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/bank/src/main/java" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/client-contract/src/main/java" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/client-contract/src/main/resources" charset="UTF-8" />

@@ -1,6 +1,6 @@
 CREATE TABLE account (
 	public_key VARCHAR(1024),
-	user VARCHAR(50),
+	username VARCHAR(50),
 	balance INT,
 	CONSTRAINT pk_account PRIMARY KEY (public_key)
 );
