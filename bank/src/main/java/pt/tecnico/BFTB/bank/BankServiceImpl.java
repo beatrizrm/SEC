@@ -312,7 +312,6 @@ public class BankServiceImpl extends BankServiceGrpc.BankServiceImplBase{
 
     @Override
     public void audit(auditRequest request, StreamObserver<auditResponse> responseObserver) {
-
         String key_string = request.getKey();
         PublicKey key = CryptoHelper.publicKeyFromBase64(key_string);
 

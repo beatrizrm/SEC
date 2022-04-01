@@ -166,6 +166,25 @@ public class ClientServiceImpl {
         return response.getStatus().getStatus();
     }
 
+    private String prepareAuditRequest(String _userKey) throws RuntimeException {
+        int retries = 3;
+        while (retries >= 0) {
+            try {
+                if (retries != 3) { System.out.println("Retrying Audit request... Retries left: " + retries); }
+                String response = auditRequest(_userKey);
+                return response;
+            } catch (StatusRuntimeException e) {
+                Code error = e.getStatus().getCode();
+                if (!(error == Status.DEADLINE_EXCEEDED.getCode() || error == Status.CANCELLED.getCode()
+                        || error == Status.UNAVAILABLE.getCode())) {
+                    throw e;
+                }
+                retries--;
+            }
+        }
+        return "Audit request failed";
+    }
+
     // Sends a balance request and returns the balance (CHECK)
     private String auditRequest(String _userKey) throws RuntimeException {
 
@@ -174,7 +193,7 @@ public class ClientServiceImpl {
         String key_string = CryptoHelper.encodeToBase64(key.getEncoded());
 
         auditRequest request = auditRequest.newBuilder().setKey(key_string).build();
-        auditResponse response = _stub.audit(request);
+        auditResponse response = _stub.withDeadlineAfter(timeoutMs, TimeUnit.MILLISECONDS).audit(request);
 
         //verify server signature
         if(!CryptoHelper.verifySignature(response.getTransactionHistory().getBytes(StandardCharsets.UTF_8),response.getSignature(),server_pubkey)) {
@@ -246,6 +265,25 @@ public class ClientServiceImpl {
 
     }
 
+    private String prepareCheckAccountRequest(String _userKey) {
+        int retries = 3;
+        while (retries >= 0) {
+            try {
+                if (retries != 3) { System.out.println("Retrying checkAccount request... Retries left: " + retries); }
+                String response = checkAccountRequest(_userKey);
+                return response;
+            } catch (StatusRuntimeException e) {
+                Code error = e.getStatus().getCode();
+                if (!(error == Status.DEADLINE_EXCEEDED.getCode() || error == Status.CANCELLED.getCode()
+                        || error == Status.UNAVAILABLE.getCode())) {
+                    throw e;
+                }
+                retries--;
+            }
+        }
+        return "CheckAccount request failed";
+    }
+
     // Sends a balance request and returns the balance (Check)
     private String checkAccountRequest(String _userKey) throws RuntimeException {
 
@@ -254,7 +292,7 @@ public class ClientServiceImpl {
         String key_string = CryptoHelper.encodeToBase64(key.getEncoded());
 
         checkAccountRequest request = checkAccountRequest.newBuilder().setKey(key_string).build();
-        checkAccountResponse response = _stub.checkAccount(request);
+        checkAccountResponse response = _stub.withDeadlineAfter(timeoutMs, TimeUnit.MILLISECONDS).checkAccount(request);
 
         checkAccountResMsg msg = response.getMsgResponse();
 
@@ -396,7 +434,7 @@ public class ClientServiceImpl {
                 case "check_account":
                     if (args.length != 2)
                         throw new RuntimeException("Invalid command check_account");
-                    response = checkAccountRequest(args[1]);
+                    response = prepareCheckAccountRequest(args[1]);
                     break;
                 case "receive_amount":
                     if (args.length != 3) {
@@ -414,7 +452,7 @@ public class ClientServiceImpl {
                 case "audit":
                     if (args.length != 2)
                         throw new RuntimeException("Invalid command audit");
-                    response = auditRequest(args[1]);
+                    response = prepareAuditRequest(args[1]);
                     break;
                 case "exit":
                     if (args.length != 1)
