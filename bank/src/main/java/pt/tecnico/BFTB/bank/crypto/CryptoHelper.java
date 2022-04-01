@@ -1,5 +1,6 @@
 package pt.tecnico.BFTB.bank.crypto;
 
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -34,6 +35,18 @@ public class CryptoHelper {
         return ret_keys;
     }
 
+    public static boolean checkIfAccountExists(String user) {
+        new File(CryptoHelper.pki_path + "/" + user + ".pub").getParentFile().mkdirs();
+        File key_file = new File(CryptoHelper.pki_path + "/" + user + ".pub");
+
+        if (!key_file.exists()) {
+            return false;
+        }
+
+        return true;
+
+    }
+
     public static PublicKey readRSAPublicKey(String publicKeyPath) {
         try {
             byte[] encoded = readFile(publicKeyPath);
@@ -59,28 +72,31 @@ public class CryptoHelper {
     }
 
     public static void SaveKeyPair(String user, KeyPair keyPair) throws IOException {
-
-
         PrivateKey privateKey = keyPair.getPrivate();
         PublicKey publicKey = keyPair.getPublic();
 
         // Store Public Key.
         X509EncodedKeySpec x509EncodedKeySpec = new X509EncodedKeySpec(
                 publicKey.getEncoded());
-        FileOutputStream fos = new FileOutputStream(pki_path + "/" +  user + ".pub");
+        String pubPath = pki_path + "/" +  user + ".pub";
+        new File(pubPath).getParentFile().mkdirs();    // create directories if they dont exist
+        FileOutputStream fos = new FileOutputStream(pubPath);
         fos.write(x509EncodedKeySpec.getEncoded());
         fos.close();
 
         // Store Private Key.
         PKCS8EncodedKeySpec pkcs8EncodedKeySpec = new PKCS8EncodedKeySpec(
                 privateKey.getEncoded());
-        fos = new FileOutputStream(private_path + "/" + user + ".priv");
+        String privPath = private_path + "/" + user + ".priv";
+        new File(privPath).getParentFile().mkdirs();
+        fos = new FileOutputStream(privPath);
         fos.write(pkcs8EncodedKeySpec.getEncoded());
         fos.close();
 
     }
 
     private static byte[] readFile(String path) throws IOException {
+        new File(path).getParentFile().mkdirs();    // create directories if they dont exist
         FileInputStream fis = new FileInputStream(path);
         byte[] content = new byte[fis.available()];
         fis.read(content);

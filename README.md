@@ -13,15 +13,137 @@ Highly Dependable Systems 2021-2022, 2nd semester 1st period project
 
 102178 [Tomás_Guerra](mailto:tomas.guerra@tecnico.ulisboa.pt)
 
-### Installing
+## Installing
 
-To compile and install all modules, go to bank-contract and do:
+### 1. Setting up the database
+
+Download and install [PostgreSQL](https://www.postgresql.org/download/).
+
+Initialize the database files:
+
+```sh
+sudo -u postgres initdb -D /var/lib/postgres/data
+```
+
+Start and enable the service, if needed:
+
+```
+sudo systemctl start postgresql.service
+sudo systemctl enable postgresql.service
+```
+
+Create a new user and database:
+
+```sh
+sudo -u postgres psql -c "CREATE ROLE sec LOGIN PASSWORD 'sec';"
+sudo -u postgres psql -c "CREATE DATABASE bank WITH OWNER = sec;"
+```
+
+Create the database tables:
+
+```sh
+psql -U sec -d bank -f "create_tables.sql"
+```
+
+### 2. Installing the project
+
+To compile and install all modules:
 
 ```
 mvn clean install
 ```
 
-## Built With
+## Running the tests
 
-* [Maven](https://maven.apache.org/) - Build Tool and Dependency Management
-* [gRPC](https://grpc.io/) - RPC framework
+Open two terminal instances. In the first one, start the server:
+
+```sh
+cd bank
+mvn compile exec:java
+```
+
+In the second one, run the tests:
+
+```
+mvn verify
+```
+
+## Running the project
+
+Open three terminal instances - one for the server and two for the clients.
+
+### 1. Running the server
+
+Change to the server's directory and start the server:
+
+```sh
+cd bank
+mvn compile exec:java
+```
+
+### 2. Running the clients
+
+In the other two terminal instances (**ClientA** and **ClientB**), change to the client's directory and start the client:
+
+```sh
+cd client
+mvn compile exec:java
+```
+
+## Client commands
+
+### 1. Open account
+
+Enter the following command on **ClientA**. This will associate the user "Alice" to her public key.
+
+```
+open_account Alice
+```
+
+Enter the following command on **ClientB**.
+
+```
+open_account Bob
+```
+
+### 2. Login
+
+After closing the client, it is possible to login to the same account with the command:
+
+```
+login Alice
+```
+
+### 3. Send amount
+
+To send 50 euros from Alice to Bob, enter on **ClientA**:
+
+```
+send_amount 50 Alice Bob
+```
+
+### 4. Check account
+
+To check Bob's balance and his pending transactions, enter the following command on **ClientB**:
+
+```
+check_account Bob
+```
+
+Each transaction is described by its id, source user, destination user, amount, status and timestamp.
+
+### 5. Receive amount
+
+To make Bob accept the transfer, enter the following command on **ClientB**, specifying the transaction id returned by the `check_account` command.
+
+```
+receive_amount Bob 1
+```
+
+### 6. Audit
+
+To check a client's full transaction history, enter the following command:
+
+```
+audit Alice
+```
