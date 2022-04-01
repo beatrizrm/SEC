@@ -8,13 +8,29 @@ package pt.tecnico.BFTB.bank.grpc;
 // rather than inside an outer class named after the .proto file.
 option java_multiple_files = true;
 
-message openAccountRequest {
-  string user = 1;
+message Status {
+  int32 status = 1;
+}
+
+message checkStatusRequest {
+  string requestId = 1;
   string key = 2;
 }
 
+message checkStatusResponse {
+  Status status = 1;
+  string signature = 2;
+}
+
+message openAccountRequest {
+  string requestId = 1;
+  string user = 2;
+  string key = 3;
+}
+
 message openAccountResponse {
-  int32 status = 1;
+  Status status = 1;
+  string signature = 2;
 }
 
 message auditRequest {
@@ -23,30 +39,44 @@ message auditRequest {
 
 message auditResponse {
   string transactionHistory = 1;
+  string signature = 2;
+}
+
+message receiveAmountContent {
+  string requestId = 1;
+  string key = 2;
+  string transactionId = 3;
 }
 
 message receiveAmountRequest {
-  string key = 1;
-  string transactionId = 2;
+  receiveAmountContent msg = 1;
+  string signature = 2;
 }
 
 message receiveAmountResponse {
-  int32 status = 1;
+  Status status = 1;
+  string signature = 2;
 }
 
 message checkAccountRequest {
   string key = 1;
 }
 
-message checkAccountResponse {
+message checkAccountResMsg {
   string balance = 1;
   string pendingTransactions = 2;
 }
 
+message checkAccountResponse {
+  checkAccountResMsg msg_response = 1;
+  string signature = 2;
+}
+
 message sendAmountContent {
-  string source = 1;
-  string destination = 2;
-  string amount = 3;
+  string requestId = 1;
+  string source = 2;
+  string destination = 3;
+  string amount = 4;
 }
 
 message sendAmountRequest {
@@ -55,7 +85,8 @@ message sendAmountRequest {
 }
 
 message sendAmountResponse {
-  int32 status = 1;
+  Status status = 1;
+  string signature = 2;
 }
 
 service BankService {
@@ -64,4 +95,5 @@ service BankService {
   rpc checkAccount(checkAccountRequest) returns (checkAccountResponse);
   rpc receiveAmount(receiveAmountRequest) returns (receiveAmountResponse);
   rpc audit(auditRequest) returns (auditResponse);
+  rpc checkStatus(checkStatusRequest) returns (checkStatusResponse);
 }

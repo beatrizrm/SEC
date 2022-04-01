@@ -9,9 +9,11 @@ import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 
+import pt.tecnico.BFTB.bank.crypto.CryptoHelper;
 import pt.tecnico.BFTB.bank.exceptions.AccountAlreadyExistsException;
 import pt.tecnico.BFTB.bank.exceptions.AccountDoesntExistException;
 import pt.tecnico.BFTB.bank.exceptions.TransactionDoesntExistException;
+import pt.tecnico.BFTB.bank.pojos.BankAccount;
 import pt.tecnico.BFTB.bank.pojos.Transaction;
 
 public class BankData {
@@ -49,20 +51,49 @@ public class BankData {
         }
     }
 
-    public void createAccount(String key, int balance) throws SQLException, AccountAlreadyExistsException {
-        try (PreparedStatement ps = db.prepareStatement("INSERT INTO account VALUES (?, ?) ON CONFLICT DO NOTHING")) {
+    public void createAccount(String key, String user, int balance) throws SQLException, AccountAlreadyExistsException {
+        try (PreparedStatement ps = db.prepareStatement("INSERT INTO account VALUES (?, ?, ?) ON CONFLICT DO NOTHING")) {
             ps.setString(1, key);
-            ps.setInt(2, balance);
+            ps.setString(2, user);
+            ps.setInt(3, balance);
             if (ps.executeUpdate() == 0) {
                 throw new AccountAlreadyExistsException(key);
             }
         }
     }
 
+    public BankAccount getAccountDetails(String key) throws SQLException, AccountDoesntExistException {
+        try (PreparedStatement ps = db.prepareStatement("SELECT * FROM account WHERE public_key = ?")) {
+            ps.setString(1, key);
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                return new BankAccount(
+                    rs.getString(2),                                    // user
+                    CryptoHelper.publicKeyFromBase64(rs.getString(1)),  // public key
+                    rs.getInt(3)                                        // balance
+                );
+            }
+            else {
+                throw new AccountDoesntExistException(key);
+            }
+        }
+    }
+
+    public boolean checkIfAccountExists(String key) throws SQLException {
+        try (PreparedStatement ps = db.prepareStatement("SELECT public_key FROM account WHERE public_key = ?")) {
+            ps.setString(1, key);
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                return true;
+            }
+            return false;
+        }
+    }
+
     public int getBalance(String key) throws SQLException, AccountDoesntExistException {
         try (PreparedStatement ps = db.prepareStatement("SELECT balance FROM account WHERE public_key = ?")) {
             ps.setString(1, key);
-            ResultSet rs = ps.executeQuery();    // FIXME make sure this works
+            ResultSet rs = ps.executeQuery();
             if (rs.next()) {
                 int balance = rs.getInt(1);
                 return balance;
@@ -100,14 +131,13 @@ public class BankData {
     }
 
     public int addTransaction(Transaction transaction) throws SQLException {
-        // FIXME check if both keys exist (possibly on other)
         try (PreparedStatement ps = db.prepareStatement("INSERT INTO transaction_info VALUES (DEFAULT, ?, ?, ?, ?, ?)", 
                 Statement.RETURN_GENERATED_KEYS)) {
             ps.setString(1, transaction.getSource());
             ps.setString(2, transaction.getDestination());
             ps.setInt(3, transaction.getAmount());
             ps.setInt(4, transaction.getStatus());
-            ps.setString(5, transaction.getTimeStamp());   // FIXME change to timestamp?
+            ps.setString(5, transaction.getTimeStamp());
             ps.executeUpdate();
             ResultSet rs = ps.getGeneratedKeys();
             if (rs.next()) {
@@ -158,26 +188,49 @@ public class BankData {
     }
 
     public List<Transaction> getTransactionHistory(String key) throws SQLException {
-        // FIXME check for nonexistant?
-        try (PreparedStatement ps = db.prepareStatement("SELECT th.transaction_id, ti.source, ti.destination, "
-                + "th.sign, ti.amount, ti.status, ti.ts FROM transaction_history th JOIN transaction_info ti "
-                + "ON th.transaction_id = ti.transaction_id AND th.public_key = ?")) {    
+        try (PreparedStatement ps = db.prepareStatement("SELECT th.transaction_id, ti.source, src.username as sourceuser, "
+                + "ti.destination, dst.username as destinationUser, th.sign, ti.amount, ti.status, ti.ts FROM transaction_history th "
+                + "JOIN transaction_info ti ON th.transaction_id = ti.transaction_id JOIN account src ON src.public_key = ti.source "
+                + "JOIN account dst ON dst.public_key = ti.destination AND th.public_key = ? ORDER BY th.transaction_id")) {    
             List<Transaction> transactions = new ArrayList<Transaction>();
             ps.setString(1, key);
             ResultSet rs = ps.executeQuery();
             while (rs.next()) {
                 Transaction trans = new Transaction(
                     rs.getInt(1),       // id
-                    rs.getString(2),    // source
-                    rs.getString(3),    // destination
-                    rs.getInt(4),       // sign
-                    rs.getInt(5),       // amount
-                    rs.getInt(6),       // status
-                    rs.getString(7)     // timestamp             // FIXME change to timestamp?
+                    rs.getString(3),    // source
+                    rs.getString(5),    // destination
+                    rs.getInt(6),       // sign
+                    rs.getInt(7),       // amount
+                    rs.getInt(8),       // status
+                    rs.getString(9)     // timestamp
                 );
                 transactions.add(trans);
             }
             return transactions;  
+        }
+    }
+
+    public void setOperationStatus(String key, String requestId, int status) throws SQLException {
+        try (PreparedStatement ps = db.prepareStatement("INSERT INTO operation_log VALUES (?, ?, ?)"
+                + "ON CONFLICT (public_key, request_id) DO UPDATE SET status = ?")) {
+            ps.setString(1, key);
+            ps.setString(2, requestId);
+            ps.setInt(3, status);
+            ps.setInt(4, status);
+            ps.executeUpdate();
+        }
+    }
+
+    public int getOperationStatus(String key, String requestId) throws SQLException {
+        try (PreparedStatement ps = db.prepareStatement("SELECT status FROM operation_log WHERE (public_key, request_id) = (?, ?)")) {
+            ps.setString(1, key);
+            ps.setString(2, requestId);
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                return rs.getInt(1);
+            }
+            return 0;
         }
     }
 }

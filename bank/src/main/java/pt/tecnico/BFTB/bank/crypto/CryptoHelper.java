@@ -1,5 +1,6 @@
 package pt.tecnico.BFTB.bank.crypto;
 
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -10,6 +11,9 @@ import java.util.Base64;
 
 public class CryptoHelper {
 
+    public static final String pki_path = "../keys/pki";
+    public static final String private_path = "../keys/private";
+
     public static KeyPair generate_RSA_keyPair(){
         try  {
             KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance("RSA");
@@ -19,6 +23,28 @@ public class CryptoHelper {
             e.printStackTrace();
             return null;
         }
+    }
+
+    public static KeyPair get_keyPair(String _user) {
+
+        PublicKey pub_key = readRSAPublicKey(pki_path + "/" +  _user + ".pub");
+        PrivateKey priv_key = readRSAPrivateKey(private_path + "/" + _user + ".priv");
+
+        KeyPair ret_keys = new KeyPair(pub_key,priv_key);
+
+        return ret_keys;
+    }
+
+    public static boolean checkIfAccountExists(String user) {
+        File key_file = new File(CryptoHelper.pki_path + "/" + user + ".pub");
+
+        if (!key_file.exists()) {
+            key_file.getParentFile().mkdirs();
+            return false;
+        }
+
+        return true;
+
     }
 
     public static PublicKey readRSAPublicKey(String publicKeyPath) {
@@ -45,26 +71,32 @@ public class CryptoHelper {
         }
     }
 
-    public static void SaveKeyPair(String path, KeyPair keyPair) throws IOException {
+    public static void SaveKeyPair(String user, KeyPair keyPair) throws IOException {
         PrivateKey privateKey = keyPair.getPrivate();
         PublicKey publicKey = keyPair.getPublic();
 
         // Store Public Key.
         X509EncodedKeySpec x509EncodedKeySpec = new X509EncodedKeySpec(
                 publicKey.getEncoded());
-        FileOutputStream fos = new FileOutputStream(path + "/public.key");
+        String pubPath = pki_path + "/" +  user + ".pub";
+        new File(pubPath).getParentFile().mkdirs();    // create directories if they dont exist
+        FileOutputStream fos = new FileOutputStream(pubPath);
         fos.write(x509EncodedKeySpec.getEncoded());
         fos.close();
 
         // Store Private Key.
         PKCS8EncodedKeySpec pkcs8EncodedKeySpec = new PKCS8EncodedKeySpec(
                 privateKey.getEncoded());
-        fos = new FileOutputStream(path + "/private.key");
+        String privPath = private_path + "/" + user + ".priv";
+        new File(privPath).getParentFile().mkdirs();
+        fos = new FileOutputStream(privPath);
         fos.write(pkcs8EncodedKeySpec.getEncoded());
         fos.close();
+
     }
 
     private static byte[] readFile(String path) throws IOException {
+        new File(path).getParentFile().mkdirs();    // create directories if they dont exist
         FileInputStream fis = new FileInputStream(path);
         byte[] content = new byte[fis.available()];
         fis.read(content);

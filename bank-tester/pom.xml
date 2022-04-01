@@ -2,7 +2,6 @@
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
-
     <!-- Please replace 'CXX' below with your C (campus) with A (Alameda) /
         T (Tagus); and your group number with two digits. Then delete this comment. -->
     <parent>
@@ -10,25 +9,17 @@
         <artifactId>BFTB</artifactId>
         <version>1.0.0-SNAPSHOT</version>
     </parent>
-
-    <artifactId>bank</artifactId>
+    <artifactId>bank-tester</artifactId>
     <packaging>jar</packaging>
     <name>${project.artifactId}</name>
-
     <!-- Properties are variables used to customize the behavior of Maven and
         its plug-ins. -->
     <properties>
         <!-- see parent POM for more properties -->
-
-        <mainclass>pt.tecnico.BFTB.bank.BankMain</mainclass>
-
+        <mainclass>pt.tecnico.BFTB.hub.BankTester</mainclass>
         <bank.host>localhost</bank.host>
         <bank.port>8080</bank.port>
-        <db.name>bank</db.name>
-        <db.user>sec</db.user>
-        <db.password>sec</db.password>
     </properties>
-
     <!-- Dependencies are code archives - JARs - on which your current module
         needs in order to compile, build, test, and/or to run. When you execute a
         goal, these dependencies are resolved, and are then loaded from the local
@@ -40,52 +31,21 @@
             <artifactId>bank-contract</artifactId>
             <version>1.0.0-SNAPSHOT</version>
         </dependency>
-        <!-- https://mvnrepository.com/artifact/org.postgresql/postgresql -->
+        <!-- for testing purposes -->
+        <!-- JUnit is a unit testing framework for the Java programming language. -->
         <dependency>
-            <groupId>org.postgresql</groupId>
-            <artifactId>postgresql</artifactId>
-            <version>42.3.3</version>
-        </dependency>
-
-
-        <!-- https://mvnrepository.com/artifact/org.apache.commons/commons-math3 -->
-        <dependency>
-            <groupId>org.apache.commons</groupId>
-            <artifactId>commons-math3</artifactId>
-            <version>3.0</version>
-        </dependency>
-
-        <dependency>
-            <groupId>io.grpc</groupId>
-            <artifactId>grpc-protobuf</artifactId>
-            <version>${version.grpc}</version>
-        </dependency>
-        <!-- gRPC Stub support
-            https://mvnrepository.com/artifact/io.grpc/grpc-stub -->
-        <dependency>
-            <groupId>io.grpc</groupId>
-            <artifactId>grpc-stub</artifactId>
-            <version>${version.grpc}</version>
-        </dependency>
-        <!-- Netty is an asynchronous, event-driven, network application development framework.
-            https://mvnrepository.com/artifact/io.grpc/grpc-netty-shaded
-            The library is shaded to prevent conflicts with other versions of Netty.
-            More about shaded jars: https://stackoverflow.com/a/49811665/129497 -->
-        <dependency>
-            <groupId>io.grpc</groupId>
-            <artifactId>grpc-netty-shaded</artifactId>
-            <version>${version.grpc}</version>
-        </dependency>
-        <!-- gRPC Testing support
-            https://mvnrepository.com/artifact/io.grpc/grpc-testing -->
-        <dependency>
-            <groupId>io.grpc</groupId>
-            <artifactId>grpc-testing</artifactId>
-            <version>${version.grpc}</version>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-engine</artifactId>
+            <version>${version.junit}</version>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>pt.tecnico.BFTB.A19</groupId>
+            <artifactId>bank</artifactId>
+            <version>1.0.0-SNAPSHOT</version>
+            <scope>compile</scope>
+        </dependency>
     </dependencies>
-
     <build>
         <!-- Resources are files like properties, images, etc; used by the module. -->
         <resources>
@@ -107,24 +67,6 @@
             <!-- The Resources plug-in handles the copying of project resources to
                 the output directory. -->
             <plugin>
-                <groupId>org.xolstice.maven.plugins</groupId>
-                <artifactId>protobuf-maven-plugin</artifactId>
-                <version>0.6.1</version>
-                <configuration>
-                    <protocArtifact>com.google.protobuf:protoc:3.19.2:exe:${os.detected.classifier}</protocArtifact>
-                    <pluginId>grpc-java</pluginId>
-                    <pluginArtifact>io.grpc:protoc-gen-grpc-java:1.45.0:exe:${os.detected.classifier}</pluginArtifact>
-                </configuration>
-                <executions>
-                    <execution>
-                        <goals>
-                            <goal>compile</goal>
-                            <goal>compile-custom</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
-            <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-resources-plugin</artifactId>
                 <version>${version.maven-resources-plugin}</version>
@@ -133,6 +75,19 @@
                         <nonFilteredFileExtension>jks</nonFilteredFileExtension>
                     </nonFilteredFileExtensions>
                 </configuration>
+            </plugin>
+            <!-- The Failsafe plug-in runs integration tests. -->
+            <plugin>
+                <artifactId>maven-failsafe-plugin</artifactId>
+                <version>${version.maven-failsafe-plugin}</version>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>integration-test</goal>
+                            <goal>verify</goal>
+                        </goals>
+                    </execution>
+                </executions>
             </plugin>
             <!-- The Exec plug-in allows us to execute system and Java programs. -->
             <plugin>
@@ -147,14 +102,9 @@
                     </execution>
                 </executions>
                 <configuration>
-                    <!-- to prevent deprecation warning: -->
-                    <killAfter>-1</killAfter>
                     <mainClass>${mainclass}</mainClass>
                     <arguments>
-						<argument>${db.name}</argument>
-						<argument>${db.user}</argument>
-						<argument>${db.password}</argument>
-					</arguments>
+                    </arguments>
                 </configuration>
             </plugin>
             <!-- The Application Assembler plug-in generates scripts for starting
