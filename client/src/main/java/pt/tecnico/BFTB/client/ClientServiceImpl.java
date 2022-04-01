@@ -156,8 +156,6 @@ public class ClientServiceImpl {
         openAccountRequest request = openAccountRequest.newBuilder().setRequestId(reqId.toString()).setKey(key).setUser(_user).build();
         openAccountResponse response = _stub.withDeadlineAfter(timeoutMs, TimeUnit.MILLISECONDS).openAccount(request);
 
-        System.out.println("open account function server key: " + server_pubkey.toString());
-
         //verify server signature
         if(!CryptoHelper.verifySignature(response.getStatus().toByteArray(),response.getSignature(),server_pubkey)) {
             throw new RuntimeException("Invalid signature");
@@ -405,7 +403,6 @@ public class ClientServiceImpl {
                     if (args.length != 2)
                         throw new RuntimeException("Invalid command open_account");
                     int status = this.prepareOpenAccountRequest(args[1]);
-                    System.out.println(status);
                     if(status == 1){
                         response = "OK";
                     } else if (status == -1) {

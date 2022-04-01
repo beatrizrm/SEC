@@ -47,10 +47,6 @@ public class BankServiceImpl extends BankServiceGrpc.BankServiceImplBase{
 
     @Override
     public void openAccount(openAccountRequest request, StreamObserver<openAccountResponse> responseObserver) {
-
-        System.out.println("estou na funcao open acount");
-
-
         String key = request.getKey();
         String user = request.getUser();
         String requestId = request.getRequestId();
@@ -88,9 +84,7 @@ public class BankServiceImpl extends BankServiceGrpc.BankServiceImplBase{
         // sign message so client knows that was server who send it
         String signature = CryptoHelper.encodeToBase64(CryptoHelper.signMessage(serverKey,status1.toByteArray()));
 
-        System.out.println("estou aqui para mandar a resposta");
         openAccountResponse response = openAccountResponse.newBuilder().setStatus(status1).setSignature(signature).build();
-        System.out.println(response.toString());
         responseObserver.onNext(response);
         responseObserver.onCompleted();
 
