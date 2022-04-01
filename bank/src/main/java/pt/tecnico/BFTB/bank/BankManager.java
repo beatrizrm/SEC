@@ -21,9 +21,22 @@ public class BankManager {
     private KeyPair serverKeys;
 
     public BankManager() throws IOException {
-        this.serverKeys = CryptoHelper.generate_RSA_keyPair();
-        CryptoHelper.SaveKeyPair("server",serverKeys);
-        System.out.println(serverKeys.getPublic().toString());
+
+        //if server has no keys create them
+        if(!CryptoHelper.checkIfAccountExists("server")) {
+            this.serverKeys = CryptoHelper.generate_RSA_keyPair();
+            CryptoHelper.SaveKeyPair("server",serverKeys);
+            return;
+        }
+
+        set_serverKeys(CryptoHelper.get_keyPair("server"));
+
+    }
+
+    public void set_serverKeys(KeyPair keys) {
+
+        this.serverKeys = keys;
+
     }
 
 
