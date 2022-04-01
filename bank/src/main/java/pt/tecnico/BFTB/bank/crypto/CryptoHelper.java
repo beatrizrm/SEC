@@ -24,6 +24,16 @@ public class CryptoHelper {
         }
     }
 
+    public static KeyPair get_keyPair(String _user) {
+
+        PublicKey pub_key = readRSAPublicKey(pki_path + "/" +  _user + ".pub");
+        PrivateKey priv_key = readRSAPrivateKey(private_path + "/" + _user + ".priv");
+
+        KeyPair ret_keys = new KeyPair(pub_key,priv_key);
+
+        return ret_keys;
+    }
+
     public static PublicKey readRSAPublicKey(String publicKeyPath) {
         try {
             byte[] encoded = readFile(publicKeyPath);

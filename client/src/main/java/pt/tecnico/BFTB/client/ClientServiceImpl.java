@@ -37,7 +37,9 @@ public class ClientServiceImpl {
         _channel = ManagedChannelBuilder.forAddress(_BankHost, _BankPort).usePlaintext().build();
         _stub = BankServiceGrpc.newBlockingStub(_channel);
         this.server_pubkey = CryptoHelper.readRSAPublicKey(CryptoHelper.pki_path + "/server.pub");
+        this.clientKeys = null;
         timeoutMs = 300;
+        
     }
 
     // Checks if the hub host name is valid and saves it
@@ -57,12 +59,39 @@ public class ClientServiceImpl {
         _BankPort = portInt;
     }
 
+    public void set_ClientKeys(KeyPair keys) {
+        if (keys == null) {
+            throw new RuntimeException("KeyPair is empty");
+        }
+        this.clientKeys = keys;
+    }
+
     public String get_BankHost() {
         return _BankHost;
     }
 
     public int get_BankPort() {
         return _BankPort;
+    }
+
+    private int log_in(String _user) throws FileNotFoundException {
+
+        int status = 1;
+
+        if(this.clientKeys != null) {
+            return 0;
+        }
+
+        if(!CryptoHelper.checkIfAccountExists(_user)) {
+            status = 0;
+            throw new FileNotFoundException("There isnt an account with that name");
+        }
+
+        //set the client keys
+        set_ClientKeys(CryptoHelper.get_keyPair(_user));
+
+        return status;
+
     }
 
     private int prepareOpenAccountRequest(String _user) throws RuntimeException, IOException {
@@ -102,6 +131,16 @@ public class ClientServiceImpl {
 
     // Sends a balance request and returns the balance (CHECK)
     private int openAccountRequest(String _user, UUID reqId) throws RuntimeException, IOException {
+
+        // already logged in an account
+        if(this.clientKeys != null) {
+            return 2;
+        }
+
+        // check if there is an account with that name already
+        if(CryptoHelper.checkIfAccountExists(_user)) {
+            return 3;
+        }
 
         //gera as chaves do cliente
         clientKeys = CryptoHelper.generate_RSA_keyPair();
@@ -209,7 +248,7 @@ public class ClientServiceImpl {
 
         //construct the message
         receiveAmountContent msg = receiveAmountContent.newBuilder()
-                                    .setRequestId(reqId.toString()).setKey(key_string).setTransactionId(_transactionId).build();
+                .setRequestId(reqId.toString()).setKey(key_string).setTransactionId(_transactionId).build();
 
         //sign the message
         String signature = CryptoHelper.encodeToBase64(CryptoHelper.signMessage(clientKeys.getPrivate(),msg.toByteArray()));
@@ -257,8 +296,7 @@ public class ClientServiceImpl {
             if (error == Status.DEADLINE_EXCEEDED.getCode() || error == Status.CANCELLED.getCode()
                     || error == Status.UNAVAILABLE.getCode()) {
                 retries = 3;
-            }
-            else {
+            } else {
                 throw e;
             }
         }
@@ -266,7 +304,7 @@ public class ClientServiceImpl {
         // If request fails due to timeout or connection error, ask server if request was completed
         while (retries > 0) {
             try {
-                System.out.println("Checking status of sendAmount request... Retries left: " + (retries-1));
+                System.out.println("Checking status of sendAmount request... Retries left: " + (retries - 1));
                 status = checkOperationStatus(reqId);
                 retries = 0;
             } catch (StatusRuntimeException e) {
@@ -279,7 +317,9 @@ public class ClientServiceImpl {
             retries--;
         }
         return status;
+
     }
+    
 
     // Sends an amount request and returns the balance (CHECK)
     private int sendAmountRequest(String amount, String source, String dest, UUID reqId) throws RuntimeException {
@@ -332,6 +372,16 @@ public class ClientServiceImpl {
         String response = "OK";
         try {
             switch (args[0]) {
+                case "login":
+                    if(args.length != 2)
+                        throw new RuntimeException("Invalid command open_account");
+                    int status0 = this.log_in(args[1]);
+                    if(status0 == 1){
+                        response = "Logged in sucess";
+                    } else {
+                        response = "Already logged in";
+                    }
+                    break;
                 case "open_account":
                     if (args.length != 2)
                         throw new RuntimeException("Invalid command open_account");
@@ -341,9 +391,14 @@ public class ClientServiceImpl {
                         response = "OK";
                     } else if (status == -1) {
                         response = "Couldn't confirm if operation was completed";
-                    } else {
-                        response = "Couldn't open account";
-                    }
+                    }  else if(status == 2) {
+                        response = "Already logged in";
+                     } else if(status == 3) {
+                        response = "An account with that name already exists";
+                    }   else {
+                            response = "Couldn't open account";
+                        }
+
                     break;
                 case "send_amount":
                     if (args.length != 4)
