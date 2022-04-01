@@ -166,7 +166,7 @@ public class ClientServiceImpl {
         return response.getStatus().getStatus();
     }
 
-    private String prepareAuditRequest(String _userKey) {
+    private String prepareAuditRequest(String _userKey) throws RuntimeException {
         int retries = 3;
         while (retries >= 0) {
             try {
@@ -182,7 +182,7 @@ public class ClientServiceImpl {
                 retries--;
             }
         }
-        return "";
+        return "Audit request failed";
     }
 
     // Sends a balance request and returns the balance (CHECK)
@@ -263,6 +263,25 @@ public class ClientServiceImpl {
 
         return response.getStatus().getStatus();
 
+    }
+
+    private String prepareCheckAccountRequest(String _userKey) {
+        int retries = 3;
+        while (retries >= 0) {
+            try {
+                if (retries != 3) { System.out.println("Retrying checkAccount request... Retries left: " + retries); }
+                String response = checkAccountRequest(_userKey);
+                return response;
+            } catch (StatusRuntimeException e) {
+                Code error = e.getStatus().getCode();
+                if (!(error == Status.DEADLINE_EXCEEDED.getCode() || error == Status.CANCELLED.getCode()
+                        || error == Status.UNAVAILABLE.getCode())) {
+                    throw e;
+                }
+                retries--;
+            }
+        }
+        return "CheckAccount request failed";
     }
 
     // Sends a balance request and returns the balance (Check)
@@ -415,7 +434,7 @@ public class ClientServiceImpl {
                 case "check_account":
                     if (args.length != 2)
                         throw new RuntimeException("Invalid command check_account");
-                    response = checkAccountRequest(args[1]);
+                    response = prepareCheckAccountRequest(args[1]);
                     break;
                 case "receive_amount":
                     if (args.length != 3) {
