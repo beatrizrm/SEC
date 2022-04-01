@@ -31,6 +31,7 @@ public class ClientServiceImpl {
         _channel = ManagedChannelBuilder.forAddress(_BankHost, _BankPort).usePlaintext().build();
         _stub = BankServiceGrpc.newBlockingStub(_channel);
         this.server_pubkey = CryptoHelper.readRSAPublicKey(CryptoHelper.pki_path + "/server.pub");
+        this.clientKeys = null;
     }
 
     // Checks if the hub host name is valid and saves it
@@ -50,6 +51,13 @@ public class ClientServiceImpl {
         _BankPort = portInt;
     }
 
+    public void set_ClientKeys(KeyPair keys) {
+        if (keys == null) {
+            throw new RuntimeException("KeyPair is empty");
+        }
+        this.clientKeys = keys;
+    }
+
     public String get_BankHost() {
         return _BankHost;
     }
@@ -58,8 +66,39 @@ public class ClientServiceImpl {
         return _BankPort;
     }
 
+
+    private int log_in(String _user) throws FileNotFoundException {
+
+        int status = 1;
+
+        if(this.clientKeys != null) {
+            return 0;
+        }
+
+        if(!CryptoHelper.checkIfAccountExists(_user)) {
+            status = 0;
+            throw new FileNotFoundException("There isnt an account with that name");
+        }
+
+        //set the client keys
+        set_ClientKeys(CryptoHelper.get_keyPair(_user));
+
+        return status;
+
+    }
+
     // Sends a balance request and returns the balance (CHECK)
     private int openAccountRequest(String _user) throws RuntimeException, IOException {
+
+        // already logged in an account
+        if(this.clientKeys != null) {
+            return 2;
+        }
+
+        // check if there is an account with that name already
+        if(CryptoHelper.checkIfAccountExists(_user)) {
+            return 3;
+        }
 
         //gera as chaves do cliente
         clientKeys = CryptoHelper.generate_RSA_keyPair();
@@ -192,17 +231,28 @@ public class ClientServiceImpl {
         String response = "OK";
         try {
             switch (args[0]) {
+                case "login":
+                    if(args.length != 2)
+                        throw new RuntimeException("Invalid command open_account");
+                    int status0 = this.log_in(args[1]);
+                    if(status0 == 1){
+                        response = "Logged in sucess";
+                    } else {
+                        response = "Already logged in";
+                    }
+                    break;
                 case "open_account":
                     if (args.length != 2)
                         throw new RuntimeException("Invalid command open_account");
-
-                    //
-
                     int status = this.openAccountRequest(args[1]);
                     System.out.println(status);
                     if(status == 1){
                         response = "OK";
-                    } else {
+                    } else if(status == 2) {
+                        response = "Already logged in";
+                    } else if(status == 3) {
+                        response = "An account with that name already exists";
+                    } else  {
                         response = "Couldn't open account";
                     }
                     break;
