@@ -7,11 +7,11 @@ Highly Dependable Systems 2021-2022, 2nd semester 1st period project
 
 **Group 14**
 
-86391 [Beatriz_Alves](mailto:beatriz.alves@tecnico.ulisboa.pt)
+86391 [Beatriz Alves](mailto:beatriz.alves@tecnico.ulisboa.pt)
 
 92453 [Diogo Branco](mailto:diogo.m.p.c.branco@tecnico.ulisboa.pt)
 
-102178 [Tomás_Guerra](mailto:tomas.guerra@tecnico.ulisboa.pt)
+102178 [Tomás Guerra](mailto:tomas.guerra@tecnico.ulisboa.pt)
 
 ## Installing
 
