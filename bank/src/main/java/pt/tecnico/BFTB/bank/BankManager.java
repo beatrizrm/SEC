@@ -147,11 +147,11 @@ public class BankManager {
      * @throws TransactionAlreadyCompletedException
         */
 
-    public synchronized int receiveAmount(BankData db, PublicKey key, String transactionId) throws SQLException,
+    public synchronized int receiveAmount(BankData db, PublicKey key, String transactionId, String signature) throws SQLException,
             TransactionDoesntExistException, AccountDoesntExistException, TransactionAlreadyCompletedException, AccountPermissionException, InsufficientBalanceException {
         Transaction transaction = db.getTransactionDetails(Integer.parseInt(transactionId));
         checkIfCanReceive(db, key, transaction);
-        db.confirmTransaction(Integer.parseInt(transactionId));
+        db.confirmTransaction(Integer.parseInt(transactionId), signature);
         db.confirmWithdrawal(transaction.getSource(), transaction.getAmount());
         db.confirmDeposit(transaction.getDestination(), transaction.getAmount());
         return 1;
@@ -165,8 +165,8 @@ public class BankManager {
      * @throws SQLException
      */
 
-    public synchronized void addTransactionHistory(BankData db, Transaction transaction) throws SQLException {
-        int transactionId = db.addTransaction(transaction);
+    public synchronized void addTransactionHistory(BankData db, Transaction transaction, String signature) throws SQLException {
+        int transactionId = db.addTransaction(transaction, signature);
         db.addTransactionToHistory(transaction.getSource(), transactionId, 0);
         db.addTransactionToHistory(transaction.getDestination(), transactionId, 1);
     }

@@ -130,14 +130,15 @@ public class BankData {
         }
     }
 
-    public int addTransaction(Transaction transaction) throws SQLException {
-        try (PreparedStatement ps = db.prepareStatement("INSERT INTO transaction_info VALUES (DEFAULT, ?, ?, ?, ?, ?)", 
+    public int addTransaction(Transaction transaction, String srcSignature) throws SQLException {
+        try (PreparedStatement ps = db.prepareStatement("INSERT INTO transaction_info VALUES (DEFAULT, ?, ?, ?, ?, ?, ?)", 
                 Statement.RETURN_GENERATED_KEYS)) {
             ps.setString(1, transaction.getSource());
             ps.setString(2, transaction.getDestination());
             ps.setInt(3, transaction.getAmount());
             ps.setInt(4, transaction.getStatus());
             ps.setString(5, transaction.getTimeStamp());
+            ps.setString(6, srcSignature);
             ps.executeUpdate();
             ResultSet rs = ps.getGeneratedKeys();
             if (rs.next()) {
@@ -178,9 +179,10 @@ public class BankData {
         }
     }
 
-    public void confirmTransaction(int transactionId) throws SQLException, TransactionDoesntExistException {
-        try (PreparedStatement ps = db.prepareStatement("UPDATE transaction_info SET status = 1 WHERE transaction_id = ?")) {
-            ps.setInt(1, transactionId);
+    public void confirmTransaction(int transactionId, String dstSignature) throws SQLException, TransactionDoesntExistException {
+        try (PreparedStatement ps = db.prepareStatement("UPDATE transaction_info SET status = 1, dst_signature = ? WHERE transaction_id = ?")) {
+            ps.setString(1, dstSignature);
+            ps.setInt(2, transactionId);
             if (ps.executeUpdate() == 0) {
                 throw new TransactionDoesntExistException(transactionId);
             }

@@ -12,6 +12,8 @@ CREATE TABLE transaction_info (
 	amount INT,
 	status INT,
 	ts VARCHAR(100),
+	src_signature VARCHAR(1024),
+	dst_signature VARCHAR(1024),
 	CONSTRAINT pk_transaction_info PRIMARY KEY (transaction_id),
 	CONSTRAINT fk_source FOREIGN KEY (source) references account(public_key),
 	CONSTRAINT fk_destination FOREIGN KEY (destination) references account(public_key)

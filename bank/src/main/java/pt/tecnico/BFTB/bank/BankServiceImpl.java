@@ -141,7 +141,7 @@ public class BankServiceImpl extends BankServiceGrpc.BankServiceImplBase{
             db.beginTransaction();
             bankAccounts.checkIfTransactionPossible(db, key_source, key_destiny, Integer.parseInt(amount));
             Transaction transaction = new Transaction(0, msg.getSource(), msg.getDestination(), 0, Integer.parseInt(amount), 0, timeStamp);
-            bankAccounts.addTransactionHistory(db, transaction);
+            bankAccounts.addTransactionHistory(db, transaction, request.getSignature());
             bankAccounts.setOperationStatus(db, msg.getSource(), requestId, 1);
             db.commit();
             status = 1;
@@ -263,7 +263,7 @@ public class BankServiceImpl extends BankServiceGrpc.BankServiceImplBase{
         try {
             db.connect(dbUrl, dbUser, dbPw);
             db.beginTransaction();
-            bankAccounts.receiveAmount(db, CryptoHelper.publicKeyFromBase64(key), transactionID);
+            bankAccounts.receiveAmount(db, CryptoHelper.publicKeyFromBase64(key), transactionID, signature);
             bankAccounts.setOperationStatus(db, key, requestId, 1);
             db.commit();
             status = 1;
