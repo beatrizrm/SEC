@@ -8,6 +8,14 @@ package pt.tecnico.BFTB.bank.grpc;
 // rather than inside an outer class named after the .proto file.
 option java_multiple_files = true;
 
+message nonceRequest {
+  string key = 1;
+}
+
+message nonceResponse {
+  string nonce = 1;
+}
+
 message Status {
   int32 status = 1;
 }
@@ -46,6 +54,7 @@ message receiveAmountContent {
   string requestId = 1;
   string key = 2;
   string transactionId = 3;
+  string nonce = 4;
 }
 
 message receiveAmountRequest {
@@ -77,6 +86,7 @@ message sendAmountContent {
   string source = 2;
   string destination = 3;
   string amount = 4;
+  string nonce = 5;
 }
 
 message sendAmountRequest {
@@ -90,6 +100,7 @@ message sendAmountResponse {
 }
 
 service BankService {
+  rpc getNonce(nonceRequest) returns (nonceResponse);
   rpc openAccount(openAccountRequest) returns (openAccountResponse);
   rpc sendAmount(sendAmountRequest) returns (sendAmountResponse);
   rpc checkAccount(checkAccountRequest) returns (checkAccountResponse);

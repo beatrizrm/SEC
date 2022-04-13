@@ -35,3 +35,8 @@ CREATE TABLE operation_log (
 	CONSTRAINT pk_operation_log PRIMARY KEY (public_key, request_id),
 	CONSTRAINT fk_public_key FOREIGN KEY (public_key) references account(public_key)
 );
+
+CREATE TABLE used_nonces (
+	nonce CHAR(28),
+	CONSTRAINT pk_nonces PRIMARY KEY (nonce)
+);

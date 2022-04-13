@@ -4,6 +4,7 @@ import pt.tecnico.BFTB.bank.exceptions.AccountAlreadyExistsException;
 import pt.tecnico.BFTB.bank.exceptions.AccountDoesntExistException;
 import pt.tecnico.BFTB.bank.exceptions.AccountPermissionException;
 import pt.tecnico.BFTB.bank.exceptions.InsufficientBalanceException;
+import pt.tecnico.BFTB.bank.exceptions.NonceAlreadyExistsException;
 import pt.tecnico.BFTB.bank.exceptions.TransactionAlreadyCompletedException;
 import pt.tecnico.BFTB.bank.exceptions.TransactionDoesntExistException;
 import pt.tecnico.BFTB.bank.grpc.Bank;
@@ -194,5 +195,9 @@ public class BankManager {
 
     public synchronized int getOperationStatus(BankData db, String key, String requestId) throws SQLException {
         return db.getOperationStatus(key, requestId);
+    }
+
+    public synchronized void addNonce(BankData db, String nonce) throws SQLException, NonceAlreadyExistsException {
+        db.addNonce(nonce);
     }
 }

@@ -12,6 +12,7 @@ import java.util.List;
 import pt.tecnico.BFTB.bank.crypto.CryptoHelper;
 import pt.tecnico.BFTB.bank.exceptions.AccountAlreadyExistsException;
 import pt.tecnico.BFTB.bank.exceptions.AccountDoesntExistException;
+import pt.tecnico.BFTB.bank.exceptions.NonceAlreadyExistsException;
 import pt.tecnico.BFTB.bank.exceptions.TransactionDoesntExistException;
 import pt.tecnico.BFTB.bank.pojos.BankAccount;
 import pt.tecnico.BFTB.bank.pojos.Transaction;
@@ -233,6 +234,15 @@ public class BankData {
                 return rs.getInt(1);
             }
             return 0;
+        }
+    }
+
+    public void addNonce(String nonce) throws SQLException, NonceAlreadyExistsException {
+        try (PreparedStatement ps = db.prepareStatement("INSERT INTO used_nonces VALUES (?) ON CONFLICT DO NOTHING")) {
+            ps.setString(1, nonce);
+            if (ps.executeUpdate() == 0) {
+                throw new NonceAlreadyExistsException();
+            }
         }
     }
 }

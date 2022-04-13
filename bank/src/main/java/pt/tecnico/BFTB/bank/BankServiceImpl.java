@@ -6,6 +6,7 @@ import pt.tecnico.BFTB.bank.exceptions.AccountAlreadyExistsException;
 import pt.tecnico.BFTB.bank.exceptions.AccountDoesntExistException;
 import pt.tecnico.BFTB.bank.exceptions.AccountPermissionException;
 import pt.tecnico.BFTB.bank.exceptions.InsufficientBalanceException;
+import pt.tecnico.BFTB.bank.exceptions.NonceAlreadyExistsException;
 import pt.tecnico.BFTB.bank.exceptions.TransactionAlreadyCompletedException;
 import pt.tecnico.BFTB.bank.exceptions.TransactionDoesntExistException;
 import pt.tecnico.BFTB.bank.crypto.CryptoHelper;
@@ -19,6 +20,7 @@ import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -31,18 +33,16 @@ import static io.grpc.Status.UNKNOWN;
 import static io.grpc.Status.PERMISSION_DENIED;
 
 public class BankServiceImpl extends BankServiceGrpc.BankServiceImplBase{
-
-    String dbUrl;
-    String dbUser;
-    String dbPw;
-
-    private  BankManager bankAccounts;
+    private BankManager bankAccounts;
+    private String dbUrl, dbUser, dbPw;
+    private HashMap<PublicKey, String> pendingRequests;
 
     public BankServiceImpl(String dbName, String dbUser, String dbPw) throws IOException {
         this.dbUrl = "jdbc:postgresql:" + dbName;
         this.dbUser = dbUser;
         this.dbPw = dbPw;
         this.bankAccounts = new BankManager();
+        this.pendingRequests = new HashMap<PublicKey, String>();
     }
 
     @Override
@@ -106,6 +106,14 @@ public class BankServiceImpl extends BankServiceGrpc.BankServiceImplBase{
             return;
         }
 
+        // verify nonce
+        String nonce = pendingRequests.get(key_source);
+        if (nonce == null || !nonce.equals(msg.getNonce())) {
+            responseObserver.onError(
+                    INVALID_ARGUMENT.withDescription("sendAmount: Incorrect nonce").asRuntimeException());
+            return;
+        }
+
         String key_destination = msg.getDestination();
         String amount = msg.getAmount();
         String timeStamp = new SimpleDateFormat("yyyy.MM.dd.HH.mm.ss").format(new Date());
@@ -138,6 +146,7 @@ public class BankServiceImpl extends BankServiceGrpc.BankServiceImplBase{
         int status = 0;
         try {
             db.connect(dbUrl, dbUser, dbPw);
+            bankAccounts.addNonce(db, nonce);
             db.beginTransaction();
             bankAccounts.checkIfTransactionPossible(db, key_source, key_destiny, Integer.parseInt(amount));
             Transaction transaction = new Transaction(0, msg.getSource(), msg.getDestination(), 0, Integer.parseInt(amount), 0, timeStamp);
@@ -154,6 +163,9 @@ public class BankServiceImpl extends BankServiceGrpc.BankServiceImplBase{
             responseObserver.onError(FAILED_PRECONDITION.withDescription("sendAmount: " + e.getMessage()).asRuntimeException());
             db.rollback();
             bankAccounts.setOperationStatus(db, msg.getSource(), requestId, 0);
+            return;
+        } catch (NonceAlreadyExistsException e) {
+            responseObserver.onError(PERMISSION_DENIED.withDescription("sendAmount: " + e.getMessage()).asRuntimeException());
             return;
         } catch (SQLException e) {
             responseObserver.onError(ABORTED.withDescription("sendAmount: Error connecting to database.").asRuntimeException());
@@ -246,6 +258,14 @@ public class BankServiceImpl extends BankServiceGrpc.BankServiceImplBase{
             return;
         }
 
+        // verify nonce
+        String nonce = pendingRequests.get(CryptoHelper.publicKeyFromBase64(key));
+        if (nonce == null || !nonce.equals(msg.getNonce())) {
+            responseObserver.onError(
+                    INVALID_ARGUMENT.withDescription("receiveAmount: Incorrect nonce").asRuntimeException());
+            return;
+        }
+
         if (key == null || key.isBlank()) {
             responseObserver.onError(
                     INVALID_ARGUMENT.withDescription("receiveAmount: Client Key cannot be empty!").asRuntimeException());
@@ -262,6 +282,7 @@ public class BankServiceImpl extends BankServiceGrpc.BankServiceImplBase{
         int status = 0;
         try {
             db.connect(dbUrl, dbUser, dbPw);
+            bankAccounts.addNonce(db, nonce);
             db.beginTransaction();
             bankAccounts.receiveAmount(db, CryptoHelper.publicKeyFromBase64(key), transactionID, signature);
             bankAccounts.setOperationStatus(db, key, requestId, 1);
@@ -281,6 +302,9 @@ public class BankServiceImpl extends BankServiceGrpc.BankServiceImplBase{
             responseObserver.onError(PERMISSION_DENIED.withDescription("receiveAmount: " + "User isn't the destinatary of the transaction").asRuntimeException());
             db.rollback();
             bankAccounts.setOperationStatus(db, key, requestId, 0);
+            return;
+        } catch (NonceAlreadyExistsException e) {
+            responseObserver.onError(PERMISSION_DENIED.withDescription("receiveAmount: " + e.getMessage()).asRuntimeException());
             return;
         } catch (SQLException e) {
             responseObserver.onError(ABORTED.withDescription("receiveAmount: Error connecting to database.").asRuntimeException());
@@ -383,6 +407,18 @@ public class BankServiceImpl extends BankServiceGrpc.BankServiceImplBase{
         String signature = CryptoHelper.encodeToBase64(CryptoHelper.signMessage(serverKey,resStatus.toByteArray()));
 
         checkStatusResponse response = checkStatusResponse.newBuilder().setStatus(resStatus).setSignature(signature).build();
+        responseObserver.onNext(response);
+        responseObserver.onCompleted();
+    }
+
+    @Override
+    public void getNonce(nonceRequest request, StreamObserver<nonceResponse> responseObserver) {
+        PublicKey key = CryptoHelper.publicKeyFromBase64(request.getKey());
+        String nonce = CryptoHelper.generateNonce();
+
+        pendingRequests.put(key, nonce);
+
+        nonceResponse response = nonceResponse.newBuilder().setNonce(nonce).build();
         responseObserver.onNext(response);
         responseObserver.onCompleted();
     }

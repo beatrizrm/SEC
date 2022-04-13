@@ -29,7 +29,6 @@ public class ClientServiceImpl {
     private PublicKey server_pubkey;
     private int timeoutMs;
 
-
     // Initialize all inner variables and checks their correctness
     public ClientServiceImpl(String[] args) {
         this.set_BankHost("localhost");
@@ -39,7 +38,6 @@ public class ClientServiceImpl {
         this.server_pubkey = CryptoHelper.readRSAPublicKey(CryptoHelper.pki_path + "/server.pub");
         this.clientKeys = null;
         timeoutMs = 300;
-        
     }
 
     // Checks if the hub host name is valid and saves it
@@ -92,6 +90,13 @@ public class ClientServiceImpl {
 
         return status;
 
+    }
+
+    private String requestNonce() throws RuntimeException {
+        String key = CryptoHelper.encodeToBase64(clientKeys.getPublic().getEncoded());
+        nonceRequest request = nonceRequest.newBuilder().setKey(key).build();
+        nonceResponse response = _stub.withDeadlineAfter(timeoutMs, TimeUnit.MILLISECONDS).getNonce(request);
+        return response.getNonce();
     }
 
     private int prepareOpenAccountRequest(String _user) throws RuntimeException, IOException {
@@ -207,7 +212,8 @@ public class ClientServiceImpl {
         int retries = 0, status = -1;
 
         try {
-            status = receiveAmountRequest(_userKey, _transactionId, reqId);
+            String nonce = requestNonce();
+            status = receiveAmountRequest(_userKey, _transactionId, reqId, nonce);
         } catch (StatusRuntimeException e) {
             Code error = e.getStatus().getCode();
             if (error == Status.DEADLINE_EXCEEDED.getCode() || error == Status.CANCELLED.getCode()
@@ -238,7 +244,7 @@ public class ClientServiceImpl {
     }
 
     // Sends a balance request and returns the balance (Check)
-    private int receiveAmountRequest(String _userKey, String _transactionId, UUID reqId) throws RuntimeException {
+    private int receiveAmountRequest(String _userKey, String _transactionId, UUID reqId, String nonce) throws RuntimeException {
 
         //get the pretend pubKey
         PublicKey key = CryptoHelper.readRSAPublicKey(CryptoHelper.pki_path+"/" + _userKey + ".pub");
@@ -246,7 +252,7 @@ public class ClientServiceImpl {
 
         //construct the message
         receiveAmountContent msg = receiveAmountContent.newBuilder()
-                .setRequestId(reqId.toString()).setKey(key_string).setTransactionId(_transactionId).build();
+                .setRequestId(reqId.toString()).setKey(key_string).setTransactionId(_transactionId).setNonce(nonce).build();
 
         //sign the message
         String signature = CryptoHelper.encodeToBase64(CryptoHelper.signMessage(clientKeys.getPrivate(),msg.toByteArray()));
@@ -307,7 +313,8 @@ public class ClientServiceImpl {
         int retries = 0, status = -1;
 
         try {
-            status = sendAmountRequest(amount, source, dest, reqId);
+            String nonce = requestNonce();
+            status = sendAmountRequest(amount, source, dest, reqId, nonce);
         } catch (StatusRuntimeException e) {
             Code error = e.getStatus().getCode();
             if (error == Status.DEADLINE_EXCEEDED.getCode() || error == Status.CANCELLED.getCode()
@@ -339,7 +346,7 @@ public class ClientServiceImpl {
     
 
     // Sends an amount request and returns the balance (CHECK)
-    private int sendAmountRequest(String amount, String source, String dest, UUID reqId) throws RuntimeException {
+    private int sendAmountRequest(String amount, String source, String dest, UUID reqId, String nonce) throws RuntimeException {
 
         int amountInt = Integer.parseInt(amount);
         if (amountInt < 0)
@@ -352,7 +359,7 @@ public class ClientServiceImpl {
 
         //create the msg and signature
         sendAmountContent msg = sendAmountContent.newBuilder().setRequestId(reqId.toString()).setAmount(amount)
-                                                    .setDestination(destiny_key).setSource(source_key).build();
+                                                    .setDestination(destiny_key).setSource(source_key).setNonce(nonce).build();
         String signature = CryptoHelper.encodeToBase64(CryptoHelper.signMessage(clientKeys.getPrivate(),msg.toByteArray()));
 
         //send the request for the server
