@@ -48,7 +48,6 @@ public class BankServiceImpl extends BankServiceGrpc.BankServiceImplBase{
         this.dbUser = dbUser;
         this.dbPw = dbPw;
         this.bankAccounts = new BankManager();
-
     }
 
     public int getInstanceNumber() {
@@ -61,9 +60,6 @@ public class BankServiceImpl extends BankServiceGrpc.BankServiceImplBase{
 
     @Override
     public void openAccount(openAccountRequest request, StreamObserver<openAccountResponse> responseObserver) {
-
-        System.out.println("estou na funcao open acount");
-
 
         String key = request.getKey();
         String user = request.getUser();
