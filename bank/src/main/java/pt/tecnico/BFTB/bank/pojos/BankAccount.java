@@ -1,10 +1,16 @@
 package pt.tecnico.BFTB.bank.pojos;
 
+import java.io.Serial;
+import java.io.Serializable;
 import java.security.PublicKey;
 import java.util.ArrayList;
 import java.util.List;
 
-public class BankAccount {
+public class BankAccount implements Serializable {
+
+
+    @Serial
+    private static final long serialVersionUID = 5199339552272503330L;
 
     private int balance;
     private String user;

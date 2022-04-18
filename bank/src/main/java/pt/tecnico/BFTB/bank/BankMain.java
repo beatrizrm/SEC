@@ -14,14 +14,13 @@ public class BankMain {
 
         try{
             // start gRPC server
-            final BindableService impl = new BankServiceImpl(args[0], args[1], args[2]);
-
+            final BindableService impl = new BankServiceImpl(args[0], args[1], args[2], Integer.parseInt(args[3]), 5432);
             // Create a new server to listen on port
-            Server server = ServerBuilder.forPort(8080).addService(impl).build();
+            Server server = ServerBuilder.forPort(8080 + Integer.parseInt(args[3])).addService(impl).build();
 
             server.start();
 
-            System.out.println("Server Started");
+            System.out.println("Server " + args[3] + " Started");
 
             server.awaitTermination();
         } catch (Exception e){
