@@ -15,6 +15,7 @@ import java.nio.charset.StandardCharsets;
 import java.security.KeyPair;
 import java.security.PrivateKey;
 import java.security.PublicKey;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
@@ -34,6 +35,7 @@ public class ClientServiceImpl {
         this.clientKeys = null;
 
         this.numReplicas = numReplicas;
+        this.replicas = new ArrayList<>();
         for (int i = 0; i < numReplicas; i++) {
             replicas.add(new Replica("localhost", 8080+i, i));
         }
