@@ -152,3 +152,64 @@ To check a client's full transaction history, enter the following command:
 ```
 audit Alice
 ```
+
+---
+
+# Initializing 4 different dbs (FIXME, TEMP)
+
+4 replicas => tolerate 1 fault
+
+original server instance started earlier ("0")
+
+1, 2, 3: instance number of each replica
+
+
+```
+sudo mkdir /tmp/postgres/ && sudo chown postgres /tmp/postgres
+sudo mkdir /var/lib/postgres/data1 && sudo chown postgres /var/lib/postgres/data1
+sudo mkdir /var/lib/postgres/data2 && sudo chown postgres /var/lib/postgres/data2
+sudo mkdir /var/lib/postgres/data3 && sudo chown postgres /var/lib/postgres/data3
+
+sudo -u postgres initdb -D /var/lib/postgres/data1
+sudo -u postgres initdb -D /var/lib/postgres/data2
+sudo -u postgres initdb -D /var/lib/postgres/data3
+```
+
+```
+sudo -u postgres pg_ctl -D /var/lib/postgres/data1 -o "-p 5433" -l /tmp/postgres/log1 start
+sudo -u postgres pg_ctl -D /var/lib/postgres/data2 -o "-p 5434" -l /tmp/postgres/log2 start
+sudo -u postgres pg_ctl -D /var/lib/postgres/data3 -o "-p 5435" -l /tmp/postgres/log3 start
+```
+
+```sh
+sudo -u postgres psql -c "CREATE ROLE sec LOGIN PASSWORD 'sec';" -p 5433
+sudo -u postgres psql -c "CREATE DATABASE bank WITH OWNER = sec;" -p 5433
+psql -U sec -d bank -f "create_tables.sql" -p 5433
+
+sudo -u postgres psql -c "CREATE ROLE sec LOGIN PASSWORD 'sec';" -p 5434
+sudo -u postgres psql -c "CREATE DATABASE bank WITH OWNER = sec;" -p 5434
+psql -U sec -d bank -f "create_tables.sql" -p 5434
+
+sudo -u postgres psql -c "CREATE ROLE sec LOGIN PASSWORD 'sec';" -p 5435
+sudo -u postgres psql -c "CREATE DATABASE bank WITH OWNER = sec;" -p 5435
+psql -U sec -d bank -f "create_tables.sql" -p 5435
+```
+
+---
+
+# Running the client (FIXME, TEMP)
+
+```
+cd client
+mvn compile exec:java -Dexec.args="4"
+```
+
+# Running the 4 replicas (FIXME, TEMP)
+
+```
+cd bank
+mvn compile exec:java -Dexec.args="bank sec sec 0"
+mvn compile exec:java -Dexec.args="bank sec sec 1"
+mvn compile exec:java -Dexec.args="bank sec sec 2"
+mvn compile exec:java -Dexec.args="bank sec sec 3"
+```

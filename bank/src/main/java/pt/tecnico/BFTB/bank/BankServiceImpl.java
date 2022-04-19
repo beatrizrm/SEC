@@ -1,6 +1,7 @@
 package pt.tecnico.BFTB.bank;
 
 import com.google.protobuf.ByteString;
+import io.grpc.ManagedChannel;
 import io.grpc.stub.StreamObserver;
 import pt.tecnico.BFTB.bank.exceptions.AccountAlreadyExistsException;
 import pt.tecnico.BFTB.bank.exceptions.AccountDoesntExistException;
@@ -19,6 +20,7 @@ import java.nio.charset.StandardCharsets;
 import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -35,14 +37,25 @@ import static io.grpc.Status.PERMISSION_DENIED;
 public class BankServiceImpl extends BankServiceGrpc.BankServiceImplBase{
     private BankManager bankAccounts;
     private String dbUrl, dbUser, dbPw;
+    private int instanceNumber;
     private HashMap<PublicKey, String> pendingRequests;
 
-    public BankServiceImpl(String dbName, String dbUser, String dbPw) throws IOException {
-        this.dbUrl = "jdbc:postgresql:" + dbName;
+    public BankServiceImpl(String dbName, String dbUser, String dbPw, int instanceNumber, int bankPort) throws IOException {
+        this.instanceNumber = instanceNumber;
+        this.dbUrl = "jdbc:postgresql://localhost:" + (bankPort + this.instanceNumber) + "/" + dbName;
+        System.out.println(this.dbUrl);
         this.dbUser = dbUser;
         this.dbPw = dbPw;
         this.bankAccounts = new BankManager();
         this.pendingRequests = new HashMap<PublicKey, String>();
+    }
+
+    public int getInstanceNumber() {
+        return instanceNumber;
+    }
+
+    public void setInstanceNumber(int instanceNumber) {
+        this.instanceNumber = instanceNumber;
     }
 
     @Override
@@ -426,4 +439,5 @@ public class BankServiceImpl extends BankServiceGrpc.BankServiceImplBase{
     private void printError(String function, String message) {
         System.out.println(function + ": " + message);
     }
+
 }
