@@ -150,8 +150,15 @@ public class CryptoHelper {
         }
     }
 
-
-
-
-
+    public static String generateNonce() {
+        try {
+            SecureRandom random = SecureRandom.getInstance("SHA1PRNG");
+            byte bytes[] = new byte[20];
+            random.nextBytes(bytes);
+            return encodeToBase64(bytes);
+        } catch (NoSuchAlgorithmException e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
 }

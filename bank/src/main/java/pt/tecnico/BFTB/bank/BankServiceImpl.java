@@ -7,6 +7,7 @@ import pt.tecnico.BFTB.bank.exceptions.AccountAlreadyExistsException;
 import pt.tecnico.BFTB.bank.exceptions.AccountDoesntExistException;
 import pt.tecnico.BFTB.bank.exceptions.AccountPermissionException;
 import pt.tecnico.BFTB.bank.exceptions.InsufficientBalanceException;
+import pt.tecnico.BFTB.bank.exceptions.NonceAlreadyExistsException;
 import pt.tecnico.BFTB.bank.exceptions.TransactionAlreadyCompletedException;
 import pt.tecnico.BFTB.bank.exceptions.TransactionDoesntExistException;
 import pt.tecnico.BFTB.bank.crypto.CryptoHelper;
@@ -21,6 +22,7 @@ import java.security.PublicKey;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -33,13 +35,10 @@ import static io.grpc.Status.UNKNOWN;
 import static io.grpc.Status.PERMISSION_DENIED;
 
 public class BankServiceImpl extends BankServiceGrpc.BankServiceImplBase{
-
-    String dbUrl;
-    String dbUser;
-    String dbPw;
-
-    private  BankManager bankAccounts;
+    private BankManager bankAccounts;
+    private String dbUrl, dbUser, dbPw;
     private int instanceNumber;
+    private HashMap<PublicKey, String> pendingRequests;
 
     public BankServiceImpl(String dbName, String dbUser, String dbPw, int instanceNumber, int bankPort) throws IOException {
         this.instanceNumber = instanceNumber;
@@ -48,6 +47,7 @@ public class BankServiceImpl extends BankServiceGrpc.BankServiceImplBase{
         this.dbUser = dbUser;
         this.dbPw = dbPw;
         this.bankAccounts = new BankManager();
+        this.pendingRequests = new HashMap<PublicKey, String>();
     }
 
     public int getInstanceNumber() {
@@ -60,7 +60,6 @@ public class BankServiceImpl extends BankServiceGrpc.BankServiceImplBase{
 
     @Override
     public void openAccount(openAccountRequest request, StreamObserver<openAccountResponse> responseObserver) {
-
         String key = request.getKey();
         String user = request.getUser();
         String requestId = request.getRequestId();
@@ -98,9 +97,7 @@ public class BankServiceImpl extends BankServiceGrpc.BankServiceImplBase{
         // sign message so client knows that was server who send it
         String signature = CryptoHelper.encodeToBase64(CryptoHelper.signMessage(serverKey,status1.toByteArray()));
 
-        System.out.println("estou aqui para mandar a resposta");
         openAccountResponse response = openAccountResponse.newBuilder().setStatus(status1).setSignature(signature).build();
-        System.out.println(response.toString());
         responseObserver.onNext(response);
         responseObserver.onCompleted();
 
@@ -119,6 +116,14 @@ public class BankServiceImpl extends BankServiceGrpc.BankServiceImplBase{
         if (!CryptoHelper.verifySignature(msg.toByteArray(),request.getSignature(),key_source)) {
             responseObserver.onError(
                     INVALID_ARGUMENT.withDescription("sendAmount: Signature not verified").asRuntimeException());
+            return;
+        }
+
+        // verify nonce
+        String nonce = pendingRequests.get(key_source);
+        if (nonce == null || !nonce.equals(msg.getNonce())) {
+            responseObserver.onError(
+                    INVALID_ARGUMENT.withDescription("sendAmount: Incorrect nonce").asRuntimeException());
             return;
         }
 
@@ -154,10 +159,11 @@ public class BankServiceImpl extends BankServiceGrpc.BankServiceImplBase{
         int status = 0;
         try {
             db.connect(dbUrl, dbUser, dbPw);
+            bankAccounts.addNonce(db, nonce);
             db.beginTransaction();
             bankAccounts.checkIfTransactionPossible(db, key_source, key_destiny, Integer.parseInt(amount));
             Transaction transaction = new Transaction(0, msg.getSource(), msg.getDestination(), 0, Integer.parseInt(amount), 0, timeStamp);
-            bankAccounts.addTransactionHistory(db, transaction);
+            bankAccounts.addTransactionHistory(db, transaction, request.getSignature());
             bankAccounts.setOperationStatus(db, msg.getSource(), requestId, 1);
             db.commit();
             status = 1;
@@ -170,6 +176,9 @@ public class BankServiceImpl extends BankServiceGrpc.BankServiceImplBase{
             responseObserver.onError(FAILED_PRECONDITION.withDescription("sendAmount: " + e.getMessage()).asRuntimeException());
             db.rollback();
             bankAccounts.setOperationStatus(db, msg.getSource(), requestId, 0);
+            return;
+        } catch (NonceAlreadyExistsException e) {
+            responseObserver.onError(PERMISSION_DENIED.withDescription("sendAmount: " + e.getMessage()).asRuntimeException());
             return;
         } catch (SQLException e) {
             responseObserver.onError(ABORTED.withDescription("sendAmount: Error connecting to database.").asRuntimeException());
@@ -262,6 +271,14 @@ public class BankServiceImpl extends BankServiceGrpc.BankServiceImplBase{
             return;
         }
 
+        // verify nonce
+        String nonce = pendingRequests.get(CryptoHelper.publicKeyFromBase64(key));
+        if (nonce == null || !nonce.equals(msg.getNonce())) {
+            responseObserver.onError(
+                    INVALID_ARGUMENT.withDescription("receiveAmount: Incorrect nonce").asRuntimeException());
+            return;
+        }
+
         if (key == null || key.isBlank()) {
             responseObserver.onError(
                     INVALID_ARGUMENT.withDescription("receiveAmount: Client Key cannot be empty!").asRuntimeException());
@@ -278,8 +295,9 @@ public class BankServiceImpl extends BankServiceGrpc.BankServiceImplBase{
         int status = 0;
         try {
             db.connect(dbUrl, dbUser, dbPw);
+            bankAccounts.addNonce(db, nonce);
             db.beginTransaction();
-            bankAccounts.receiveAmount(db, CryptoHelper.publicKeyFromBase64(key), transactionID);
+            bankAccounts.receiveAmount(db, CryptoHelper.publicKeyFromBase64(key), transactionID, signature);
             bankAccounts.setOperationStatus(db, key, requestId, 1);
             db.commit();
             status = 1;
@@ -297,6 +315,9 @@ public class BankServiceImpl extends BankServiceGrpc.BankServiceImplBase{
             responseObserver.onError(PERMISSION_DENIED.withDescription("receiveAmount: " + "User isn't the destinatary of the transaction").asRuntimeException());
             db.rollback();
             bankAccounts.setOperationStatus(db, key, requestId, 0);
+            return;
+        } catch (NonceAlreadyExistsException e) {
+            responseObserver.onError(PERMISSION_DENIED.withDescription("receiveAmount: " + e.getMessage()).asRuntimeException());
             return;
         } catch (SQLException e) {
             responseObserver.onError(ABORTED.withDescription("receiveAmount: Error connecting to database.").asRuntimeException());
@@ -399,6 +420,18 @@ public class BankServiceImpl extends BankServiceGrpc.BankServiceImplBase{
         String signature = CryptoHelper.encodeToBase64(CryptoHelper.signMessage(serverKey,resStatus.toByteArray()));
 
         checkStatusResponse response = checkStatusResponse.newBuilder().setStatus(resStatus).setSignature(signature).build();
+        responseObserver.onNext(response);
+        responseObserver.onCompleted();
+    }
+
+    @Override
+    public void getNonce(nonceRequest request, StreamObserver<nonceResponse> responseObserver) {
+        PublicKey key = CryptoHelper.publicKeyFromBase64(request.getKey());
+        String nonce = CryptoHelper.generateNonce();
+
+        pendingRequests.put(key, nonce);
+
+        nonceResponse response = nonceResponse.newBuilder().setNonce(nonce).build();
         responseObserver.onNext(response);
         responseObserver.onCompleted();
     }

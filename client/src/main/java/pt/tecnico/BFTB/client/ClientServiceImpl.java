@@ -33,7 +33,6 @@ public class ClientServiceImpl {
     public ClientServiceImpl(int numReplicas) {
         this.lib = new Library();
         this.clientKeys = null;
-
         this.numReplicas = numReplicas;
         this.replicas = new ArrayList<>();
         for (int i = 0; i < numReplicas; i++) {
@@ -66,6 +65,13 @@ public class ClientServiceImpl {
         set_ClientKeys(CryptoHelper.get_keyPair(_user));
 
         return status;
+    }
+
+    private String requestNonce() throws RuntimeException {
+        String key = CryptoHelper.encodeToBase64(clientKeys.getPublic().getEncoded());
+        nonceRequest request = nonceRequest.newBuilder().setKey(key).build();
+        nonceResponse response = _stub.withDeadlineAfter(timeoutMs, TimeUnit.MILLISECONDS).getNonce(request);
+        return response.getNonce();
     }
 
     private int prepareOpenAccountRequest(String _user) throws RuntimeException, IOException {
@@ -106,7 +112,6 @@ public class ClientServiceImpl {
     private int prepareReceiveAmountRequest(String _userKey, String _transactionId) throws RuntimeException, IOException {
         UUID reqId = UUID.randomUUID();
         int status = -1;
-
         for (Replica replica : replicas) {
             status = lib.receiveAmountRequest(replica, _userKey, _transactionId, reqId);
             System.out.println("Replica " + replica.getInstance() + " response: " + status);
@@ -126,7 +131,6 @@ public class ClientServiceImpl {
     private int prepareSendAmountRequest(String amount, String source, String dest) throws RuntimeException, IOException {
         UUID reqId = UUID.randomUUID();
         int status = -1;
-
         for (Replica replica : replicas) {
             status = lib.sendAmountRequest(replica, amount, source, dest, reqId);
             System.out.println("Replica " + replica.getInstance() + " response: " + status);
@@ -175,7 +179,6 @@ public class ClientServiceImpl {
                     if (args.length != 2)
                         throw new RuntimeException("Invalid command open_account");
                     int status = this.prepareOpenAccountRequest(args[1]);
-                    System.out.println(status);
                     if(status == 1){
                         response = "OK";
                     } else if (status == -1) {

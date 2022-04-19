@@ -12,6 +12,7 @@ import java.util.List;
 import pt.tecnico.BFTB.bank.crypto.CryptoHelper;
 import pt.tecnico.BFTB.bank.exceptions.AccountAlreadyExistsException;
 import pt.tecnico.BFTB.bank.exceptions.AccountDoesntExistException;
+import pt.tecnico.BFTB.bank.exceptions.NonceAlreadyExistsException;
 import pt.tecnico.BFTB.bank.exceptions.TransactionDoesntExistException;
 import pt.tecnico.BFTB.bank.pojos.BankAccount;
 import pt.tecnico.BFTB.bank.pojos.Transaction;
@@ -130,14 +131,15 @@ public class BankData {
         }
     }
 
-    public int addTransaction(Transaction transaction) throws SQLException {
-        try (PreparedStatement ps = db.prepareStatement("INSERT INTO transaction_info VALUES (DEFAULT, ?, ?, ?, ?, ?)", 
+    public int addTransaction(Transaction transaction, String srcSignature) throws SQLException {
+        try (PreparedStatement ps = db.prepareStatement("INSERT INTO transaction_info VALUES (DEFAULT, ?, ?, ?, ?, ?, ?)", 
                 Statement.RETURN_GENERATED_KEYS)) {
             ps.setString(1, transaction.getSource());
             ps.setString(2, transaction.getDestination());
             ps.setInt(3, transaction.getAmount());
             ps.setInt(4, transaction.getStatus());
             ps.setString(5, transaction.getTimeStamp());
+            ps.setString(6, srcSignature);
             ps.executeUpdate();
             ResultSet rs = ps.getGeneratedKeys();
             if (rs.next()) {
@@ -178,9 +180,10 @@ public class BankData {
         }
     }
 
-    public void confirmTransaction(int transactionId) throws SQLException, TransactionDoesntExistException {
-        try (PreparedStatement ps = db.prepareStatement("UPDATE transaction_info SET status = 1 WHERE transaction_id = ?")) {
-            ps.setInt(1, transactionId);
+    public void confirmTransaction(int transactionId, String dstSignature) throws SQLException, TransactionDoesntExistException {
+        try (PreparedStatement ps = db.prepareStatement("UPDATE transaction_info SET status = 1, dst_signature = ? WHERE transaction_id = ?")) {
+            ps.setString(1, dstSignature);
+            ps.setInt(2, transactionId);
             if (ps.executeUpdate() == 0) {
                 throw new TransactionDoesntExistException(transactionId);
             }
@@ -231,6 +234,15 @@ public class BankData {
                 return rs.getInt(1);
             }
             return 0;
+        }
+    }
+
+    public void addNonce(String nonce) throws SQLException, NonceAlreadyExistsException {
+        try (PreparedStatement ps = db.prepareStatement("INSERT INTO used_nonces VALUES (?) ON CONFLICT DO NOTHING")) {
+            ps.setString(1, nonce);
+            if (ps.executeUpdate() == 0) {
+                throw new NonceAlreadyExistsException();
+            }
         }
     }
 }
