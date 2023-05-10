@@ -17,10 +17,7 @@ public class ClientMain {
             System.out.printf("arg[%d] = %s%n", i, args[i]);
         }
 
-        int numReplicas = Integer.parseInt(args[0]);
-
-        final ClientServiceImpl impl = new ClientServiceImpl(numReplicas);
-
+        final ClientServiceImpl impl = new ClientServiceImpl(args);
         System.out.println("Client Started");
         String response = "";
         // Check if there is any shell redirect file to open and read commands

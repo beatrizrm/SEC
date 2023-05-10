@@ -8,14 +8,6 @@ package pt.tecnico.BFTB.bank.grpc;
 // rather than inside an outer class named after the .proto file.
 option java_multiple_files = true;
 
-message nonceRequest {
-  string key = 1;
-}
-
-message nonceResponse {
-  string nonce = 1;
-}
-
 message Status {
   int32 status = 1;
 }
@@ -30,10 +22,16 @@ message checkStatusResponse {
   string signature = 2;
 }
 
-message openAccountRequest {
+message openAccountContent {
   string requestId = 1;
   string user = 2;
   string key = 3;
+}
+
+
+message openAccountRequest {
+  openAccountContent msg = 1;
+  int64 pow = 2;
 }
 
 message openAccountResponse {
@@ -43,11 +41,18 @@ message openAccountResponse {
 
 message auditRequest {
   string key = 1;
+  string rid = 2;
+}
+
+message auditResponseMsg {
+  string transactionHistory = 1;
+  string signature = 2;
 }
 
 message auditResponse {
-  string transactionHistory = 1;
+  auditResponseMsg msg = 1;
   string signature = 2;
+  int32 rid = 3;
 }
 
 message receiveAmountContent {
@@ -59,26 +64,34 @@ message receiveAmountContent {
 
 message receiveAmountRequest {
   receiveAmountContent msg = 1;
-  string signature = 2;
+  int32 timestamp_source = 2;
+  int32 timestamp_dest = 3;
+  string signature = 4;
+  int64 pow = 5;
 }
 
 message receiveAmountResponse {
   Status status = 1;
   string signature = 2;
+  int32 wts_source = 3;
+  int32 wts_dest = 4;
 }
 
 message checkAccountRequest {
   string key = 1;
+  int32 rid = 2;
 }
 
 message checkAccountResMsg {
   string balance = 1;
   string pendingTransactions = 2;
+  string allTransactions = 3;
 }
 
 message checkAccountResponse {
   checkAccountResMsg msg_response = 1;
   string signature = 2;
+  int32 rid = 3;
 }
 
 message sendAmountContent {
@@ -91,20 +104,109 @@ message sendAmountContent {
 
 message sendAmountRequest {
   sendAmountContent message = 1;
-  string signature = 2;
+  int32 timestamp_source = 2;
+  int32 timestamp_dest = 3;
+  int32 next_transaction_id = 4;
+  string signature = 5;
+  int64 pow = 6;
 }
+
 
 message sendAmountResponse {
   Status status = 1;
+  int32 wts_source = 2;
+  int32 wts_dest = 3;
+  string signature = 4;
+}
+
+message ACKmessage {
+  string ack = 1;
+}
+
+message checkAccountWriteRequest{
+  string signature = 1;
+  checkAccountResMsg msg = 2;
+  string key = 3;
+  int32 wts = 4;
+}
+
+message checkAccountWriteResponse{
+  ACKmessage ack = 1;
+}
+
+message auditWriteRequest{
+  string signature = 1;
+  auditResponseMsg msg = 2;
+  string key = 3;
+  int32 wts = 4;
+}
+
+message auditWriteResponse{
+  ACKmessage ack = 1;
+}
+
+message nonceRequest {
+  string key = 1;
+}
+
+message nonceResponse {
+  string nonce = 1;
+}
+
+message nonceWriteRequest {
+  string nonce = 1;
+  string signature = 2; // ?
+}
+
+message nonceReg {
+  repeated string nonces = 1;
+  int32 wts = 2;
+}
+
+message nonceWriteResponse {
+  nonceReg nonce_register = 1;
+}
+
+message nonceWriteBackRequest {
+  nonceReg nonce_register = 1;
   string signature = 2;
 }
 
+message nonceWriteBackResponse {
+  ACKmessage ack = 1;
+}
+
+message maxTransactionIdRequest {
+  // empty
+}
+
+message maxTransactionIdResponse {
+  int32 id = 1;
+}
+
+
 service BankService {
-  rpc getNonce(nonceRequest) returns (nonceResponse);
+  rpc checkAccountWrite(checkAccountWriteRequest) returns (checkAccountWriteResponse);
+  rpc auditWrite(auditWriteRequest) returns (auditWriteResponse);
+  rpc openAccount(openAccountRequest) returns (openAccountResponse);
+  rpc sendAmount(sendAmountRequest) returns (sendAmountResponse);
+  rpc sendAmountConsensu(sendAmountRequest) returns (ACKmessage);
+  rpc checkAccount(checkAccountRequest) returns (checkAccountResponse);
+  rpc receiveAmount(receiveAmountRequest) returns (receiveAmountResponse);
+  rpc audit(auditRequest) returns (auditResponse);
+  rpc checkStatus(checkStatusRequest) returns (checkStatusResponse);
+  rpc nonceWrite(nonceWriteRequest) returns (nonceWriteResponse);
+  rpc nonceWriteBack(nonceWriteBackRequest) returns (nonceWriteBackResponse);
+  rpc maxTransactionId(maxTransactionIdRequest) returns (maxTransactionIdResponse);
+}
+
+service BFTService {
+  rpc checkAccountWrite(checkAccountWriteRequest) returns (checkAccountWriteResponse);
   rpc openAccount(openAccountRequest) returns (openAccountResponse);
   rpc sendAmount(sendAmountRequest) returns (sendAmountResponse);
   rpc checkAccount(checkAccountRequest) returns (checkAccountResponse);
   rpc receiveAmount(receiveAmountRequest) returns (receiveAmountResponse);
   rpc audit(auditRequest) returns (auditResponse);
   rpc checkStatus(checkStatusRequest) returns (checkStatusResponse);
+  rpc getNonce(nonceRequest) returns (nonceResponse);
 }

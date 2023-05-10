@@ -94,8 +94,8 @@ public class Transaction {
         } else {
             depOrWith = "-";
         }
-        return " Transaction{ Id: " + id + "/ Source: " + source + "/ Destination: " + destination + "/ Amount: "+ depOrWith + amount +
-                "/ Status: " + status + "/ Timestamp: " + timeStamp +
-                " }";
+        return "Transaction/" + id + "/" + source + "/"+ destination + "/"+ depOrWith + amount +
+                "/" + status + "/" + timeStamp +
+                "/";
     }
 }

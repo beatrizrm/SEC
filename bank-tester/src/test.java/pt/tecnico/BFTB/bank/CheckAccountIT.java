@@ -34,10 +34,14 @@ public class CheckAccountIT extends BaseIT {
     public void checkAccountOKTest() {
         KeyPair keyPairDiogo = CryptoHelper.generate_RSA_keyPair();
 
-        openAccountRequest openAccRequest = openAccountRequest.newBuilder().setUser("Diogo").setKey(CryptoHelper.encodeToBase64(keyPairDiogo.getPublic().getEncoded())).build();
+        openAccountRequest openAccRequest = openAccountRequest.newBuilder()
+                .setUser("Diogo")
+                .setKey(CryptoHelper.encodeToBase64(keyPairDiogo.getPublic().getEncoded())).build();
         frontend.openAccount(openAccRequest);
 
-        checkAccountRequest request = checkAccountRequest.newBuilder().setKey(CryptoHelper.encodeToBase64(keyPairDiogo.getPublic().getEncoded())).build();
+        checkAccountRequest request = checkAccountRequest.newBuilder()
+                .setKey(CryptoHelper.encodeToBase64(keyPairDiogo.getPublic().getEncoded()))
+                .setRid(0).build();
         checkAccountResponse response = frontend.checkAccount(request);
         assertEquals(500, Integer.parseInt(response.getMsgResponse().getBalance()));
     }
@@ -46,10 +50,14 @@ public class CheckAccountIT extends BaseIT {
     public void checkAccountNOKTest() {
         KeyPair keyPairDiogo = CryptoHelper.generate_RSA_keyPair();
 
-        openAccountRequest openAccRequest = openAccountRequest.newBuilder().setUser("Diogo").setKey(CryptoHelper.encodeToBase64(keyPairDiogo.getPublic().getEncoded())).build();
+        openAccountRequest openAccRequest = openAccountRequest.newBuilder()
+                .setUser("Diogo")
+                .setKey(CryptoHelper.encodeToBase64(keyPairDiogo.getPublic().getEncoded())).build();
         frontend.openAccount(openAccRequest);
 
-        checkAccountRequest request = checkAccountRequest.newBuilder().setKey("dsfdgdfgdfgdfgdfgs").build();
+        checkAccountRequest request = checkAccountRequest.newBuilder()
+                .setKey("dsfdgdfgdfgdfgdfgs")
+                .setRid(0).build();
         assertEquals(INVALID_ARGUMENT.getCode(), assertThrows(StatusRuntimeException.class, () -> frontend.checkAccount(request)).getStatus().getCode());
     }
 }

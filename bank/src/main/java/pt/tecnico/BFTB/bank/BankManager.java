@@ -54,10 +54,25 @@ public class BankManager {
         return db.getBalance(key);
     }
 
+    public synchronized void setRegister(BankData db, String key, int wts, String signature) throws SQLException {
+        db.setRegisterTs(key,wts,signature);
+    }
+    public synchronized void updateRegister(BankData db, String key, int wts, String signature) throws SQLException {
+        db.updateRegisterTs(key, wts, signature);
+    }
+
+    public synchronized int getRegisterTs(BankData db, String key) throws SQLException {
+        return db.getRegisterTs(key);
+    }
+
+    public synchronized String getRegisterSignature(BankData db, String key) throws SQLException {
+        return db.getRegisterSignature(key);
+    }
+
     /**
      * Returns the value of the balance of the bankAccount mapped by {@code key}
      *
-     * @param key
+     * @param
      * @return The value of the balance of the bankAccount with key {@code key}
      * @throws SQLException
      * @throws AccountDoesntExistException
@@ -107,6 +122,12 @@ public class BankManager {
         return db.getTransactionHistory(key);
     }
 
+    public Transaction getTransactionDetails(BankData db, int transaction_id) throws SQLException, TransactionDoesntExistException {
+
+        return db.getTransactionDetails(transaction_id);
+
+    }
+
     /**
      * Returns the value of the balance of the bankAccount mapped by {@code key}
      *
@@ -148,11 +169,11 @@ public class BankManager {
      * @throws TransactionAlreadyCompletedException
         */
 
-    public synchronized int receiveAmount(BankData db, PublicKey key, String transactionId, String signature) throws SQLException,
+    public synchronized int receiveAmount(BankData db, PublicKey key, String transactionId) throws SQLException,
             TransactionDoesntExistException, AccountDoesntExistException, TransactionAlreadyCompletedException, AccountPermissionException, InsufficientBalanceException {
         Transaction transaction = db.getTransactionDetails(Integer.parseInt(transactionId));
         checkIfCanReceive(db, key, transaction);
-        db.confirmTransaction(Integer.parseInt(transactionId), signature);
+        db.confirmTransaction(Integer.parseInt(transactionId));
         db.confirmWithdrawal(transaction.getSource(), transaction.getAmount());
         db.confirmDeposit(transaction.getDestination(), transaction.getAmount());
         return 1;
@@ -161,13 +182,19 @@ public class BankManager {
     /**
      * Adds a transaction to the bankAccount repository, mapped by {@code key}
      *
-     * @param key
+     * @param
      * @param transaction
      * @throws SQLException
      */
 
-    public synchronized void addTransactionHistory(BankData db, Transaction transaction, String signature) throws SQLException {
-        int transactionId = db.addTransaction(transaction, signature);
+    public synchronized void addTransactionHistory(BankData db, Transaction transaction) throws SQLException {
+        int transactionId;
+        if (transaction.getId() == 0) {
+            transactionId = db.addTransaction(transaction);
+        }
+        else {
+            transactionId = db.addExistingTransaction(transaction);
+        }
         db.addTransactionToHistory(transaction.getSource(), transactionId, 0);
         db.addTransactionToHistory(transaction.getDestination(), transactionId, 1);
     }
@@ -197,7 +224,27 @@ public class BankManager {
         return db.getOperationStatus(key, requestId);
     }
 
-    public synchronized void addNonce(BankData db, String nonce) throws SQLException, NonceAlreadyExistsException {
-        db.addNonce(nonce);
+    public synchronized int addNonce(BankData db, String nonce, int ts, String signature) throws SQLException, NonceAlreadyExistsException {
+        if (ts == -1) { // writer
+            int wts = db.getNonceTs() + 1;
+            db.addNonce(nonce, wts, signature);
+            return wts;
+        }
+        else { // write back
+            db.addNonce(nonce, ts, signature);
+            return ts;
+        }
+    }
+
+    public synchronized int getNonceTs(BankData db) throws SQLException {
+        return db.getNonceTs();
+    }
+
+    public synchronized List<String> getUsedNonces(BankData db) throws SQLException {
+        return db.getUsedNonces();
+    }
+
+    public synchronized int getMaxTransactionId(BankData db)  throws SQLException {
+        return db.getMaxTransactionId();
     }
 }

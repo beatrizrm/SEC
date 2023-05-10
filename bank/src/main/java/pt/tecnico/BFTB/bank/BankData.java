@@ -80,6 +80,7 @@ public class BankData {
         }
     }
 
+
     public boolean checkIfAccountExists(String key) throws SQLException {
         try (PreparedStatement ps = db.prepareStatement("SELECT public_key FROM account WHERE public_key = ?")) {
             ps.setString(1, key);
@@ -88,6 +89,49 @@ public class BankData {
                 return true;
             }
             return false;
+        }
+    }
+
+    // BANKDATA
+    public void setRegisterTs(String key, int ts, String signature) throws SQLException {
+        try (PreparedStatement ps = db.prepareStatement("INSERT INTO register VALUES (?, ?, ?)")) {
+            ps.setString(1, key);
+            ps.setInt(2, ts);
+            ps.setString(3, signature);
+            ps.executeUpdate();
+        }
+    }
+
+    public void updateRegisterTs(String key, int ts, String signature) throws SQLException {
+
+        try (PreparedStatement ps = db.prepareStatement("UPDATE register SET ts = ?, signature = ? WHERE public_key = ?")) {
+            ps.setInt(1, ts);
+            ps.setString(2, signature);
+            ps.setString(3, key);
+            ps.executeUpdate();
+        }
+
+    }
+
+    public int getRegisterTs(String key) throws SQLException {
+        try (PreparedStatement ps = db.prepareStatement("SELECT ts FROM register WHERE public_key = ?")) {
+            ps.setString(1, key);
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                return rs.getInt(1);
+            }
+            return 0;
+        }
+    }
+
+    public String getRegisterSignature(String key) throws SQLException {
+        try (PreparedStatement ps = db.prepareStatement("SELECT signature FROM register WHERE public_key = ?")) {
+            ps.setString(1, key);
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                return rs.getString(1);
+            }
+            return "";
         }
     }
 
@@ -119,6 +163,7 @@ public class BankData {
     }
 
     public void confirmWithdrawal(String key, int amount) throws SQLException, AccountDoesntExistException {
+
         if (amount == 0) {
             return;
         }
@@ -131,15 +176,15 @@ public class BankData {
         }
     }
 
-    public int addTransaction(Transaction transaction, String srcSignature) throws SQLException {
-        try (PreparedStatement ps = db.prepareStatement("INSERT INTO transaction_info VALUES (DEFAULT, ?, ?, ?, ?, ?, ?)", 
+    public int addTransaction(Transaction transaction) throws SQLException {
+        try (PreparedStatement ps = db.prepareStatement("INSERT INTO transaction_info VALUES (?, ?, ?, ?, ?, ?)",
                 Statement.RETURN_GENERATED_KEYS)) {
-            ps.setString(1, transaction.getSource());
-            ps.setString(2, transaction.getDestination());
-            ps.setInt(3, transaction.getAmount());
-            ps.setInt(4, transaction.getStatus());
-            ps.setString(5, transaction.getTimeStamp());
-            ps.setString(6, srcSignature);
+            ps.setInt(1,transaction.getId());
+            ps.setString(2, transaction.getSource());
+            ps.setString(3, transaction.getDestination());
+            ps.setInt(4, transaction.getAmount());
+            ps.setInt(5, transaction.getStatus());
+            ps.setString(6, transaction.getTimeStamp());
             ps.executeUpdate();
             ResultSet rs = ps.getGeneratedKeys();
             if (rs.next()) {
@@ -147,6 +192,19 @@ public class BankData {
                 return id;
             }
             return 0;
+        }
+    }
+
+    public int addExistingTransaction(Transaction transaction) throws SQLException {
+        try (PreparedStatement ps = db.prepareStatement("INSERT INTO transaction_info VALUES (?, ?, ?, ?, ?, ?)")) {
+            ps.setInt(1, transaction.getId());
+            ps.setString(2, transaction.getSource());
+            ps.setString(3, transaction.getDestination());
+            ps.setInt(4, transaction.getAmount());
+            ps.setInt(5, transaction.getStatus());
+            ps.setString(6, transaction.getTimeStamp());
+            ps.executeUpdate();
+            return transaction.getId();
         }
     }
 
@@ -180,10 +238,9 @@ public class BankData {
         }
     }
 
-    public void confirmTransaction(int transactionId, String dstSignature) throws SQLException, TransactionDoesntExistException {
-        try (PreparedStatement ps = db.prepareStatement("UPDATE transaction_info SET status = 1, dst_signature = ? WHERE transaction_id = ?")) {
-            ps.setString(1, dstSignature);
-            ps.setInt(2, transactionId);
+    public void confirmTransaction(int transactionId) throws SQLException, TransactionDoesntExistException {
+        try (PreparedStatement ps = db.prepareStatement("UPDATE transaction_info SET status = 1 WHERE transaction_id = ?")) {
+            ps.setInt(1, transactionId);
             if (ps.executeUpdate() == 0) {
                 throw new TransactionDoesntExistException(transactionId);
             }
@@ -237,12 +294,49 @@ public class BankData {
         }
     }
 
-    public void addNonce(String nonce) throws SQLException, NonceAlreadyExistsException {
-        try (PreparedStatement ps = db.prepareStatement("INSERT INTO used_nonces VALUES (?) ON CONFLICT DO NOTHING")) {
+    public void addNonce(String nonce, int ts, String signature) throws SQLException, NonceAlreadyExistsException {
+        try (PreparedStatement ps = db.prepareStatement("INSERT INTO used_nonces VALUES (?, ?, ?) ON CONFLICT DO NOTHING")) {
             ps.setString(1, nonce);
+            ps.setInt(2, ts);
+            ps.setString(3, signature);
             if (ps.executeUpdate() == 0) {
                 throw new NonceAlreadyExistsException();
             }
+        }
+    }
+
+    public int getNonceTs() throws SQLException {
+        try (PreparedStatement ps = db.prepareStatement("SELECT MAX(ts) FROM used_nonces")) {
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                return rs.getInt(1);
+            }
+            return 0;
+        }
+    }
+    
+    public int getMaxTransactionId() throws SQLException {
+        try (PreparedStatement ps = db.prepareStatement("SELECT MAX(transaction_id) FROM transaction_info")) {
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                return rs.getInt(1);
+            }
+            return 0;
+        }
+    }
+
+    public String getNonceSignature() throws SQLException {
+        return "";  // FIXME
+    }
+
+    public List<String> getUsedNonces() throws SQLException {
+        List<String> nonces = new ArrayList<String>();
+        try (PreparedStatement ps = db.prepareStatement("SELECT nonce FROM used_nonces")) {
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                nonces.add(rs.getString(1));
+            }
+            return nonces;
         }
     }
 }

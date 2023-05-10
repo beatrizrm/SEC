@@ -6,38 +6,58 @@ import io.grpc.Status;
 import io.grpc.StatusRuntimeException;
 import io.grpc.Status.Code;
 import pt.tecnico.BFTB.bank.grpc.*;
-import pt.tecnico.BFTB.bank.grpc.BankServiceGrpc.BankServiceBlockingStub;
+import pt.tecnico.BFTB.bank.grpc.BFTServiceGrpc.BFTServiceBlockingStub;
 import pt.tecnico.BFTB.client.crypto.CryptoHelper;
-import pt.tecnico.BFTB.client.pojos.Replica;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.security.KeyPair;
 import java.security.PrivateKey;
 import java.security.PublicKey;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 public class ClientServiceImpl {
-    //    private String user;
-    
-    private Library lib;
+
+    private String _BankHost;
+    private int _BankPort;
+    private ManagedChannel _channel;
+    private BFTServiceBlockingStub _stub;
     private KeyPair clientKeys;
-    private int numReplicas;
-    private List<Replica> replicas;
+    private String user;
+    private PublicKey server_pubkey;
+    private int timeoutMs;
+    private int numZeroes = 4;
+
 
     // Initialize all inner variables and checks their correctness
-    public ClientServiceImpl(int numReplicas) {
-        this.lib = new Library();
+    public ClientServiceImpl(String[] args) {
+        this.set_BankHost("localhost");
+        this.set_BankPort("9090"); // BFTService port
+        _channel = ManagedChannelBuilder.forAddress(_BankHost, _BankPort).usePlaintext().build();
+        _stub = BFTServiceGrpc.newBlockingStub(_channel);
+        this.server_pubkey = CryptoHelper.readRSAPublicKey(CryptoHelper.pki_path + "/server.pub");
         this.clientKeys = null;
-        this.numReplicas = numReplicas;
-        this.replicas = new ArrayList<>();
-        for (int i = 0; i < numReplicas; i++) {
-            replicas.add(new Replica("localhost", 8080+i, i));
+        timeoutMs = 3000;
+        
+    }
+
+    // Checks if the hub host name is valid and saves it
+    public void set_BankHost(String bankHost) {
+        if (bankHost == null || bankHost.isBlank()) {
+            throw new RuntimeException("Hostname is empty");
         }
+        _BankHost = bankHost;
+    }
+
+    // Checks if the hub host port is valid and saves it
+    public void set_BankPort(String bankPort) {
+        int portInt = Integer.parseInt(bankPort);
+        if (portInt < 0) {
+            throw new RuntimeException("Invalid Port");
+        }
+        _BankPort = portInt;
     }
 
     public void set_ClientKeys(KeyPair keys) {
@@ -45,7 +65,14 @@ public class ClientServiceImpl {
             throw new RuntimeException("KeyPair is empty");
         }
         this.clientKeys = keys;
-        lib.setClientKeys(clientKeys);
+    }
+
+    public String get_BankHost() {
+        return _BankHost;
+    }
+
+    public int get_BankPort() {
+        return _BankPort;
     }
 
     private int log_in(String _user) throws FileNotFoundException {
@@ -65,6 +92,7 @@ public class ClientServiceImpl {
         set_ClientKeys(CryptoHelper.get_keyPair(_user));
 
         return status;
+
     }
 
     private String requestNonce() throws RuntimeException {
@@ -75,71 +103,292 @@ public class ClientServiceImpl {
     }
 
     private int prepareOpenAccountRequest(String _user) throws RuntimeException, IOException {
+        UUID reqId = UUID.randomUUID();
+        int retries = 0, status = -1;
+
+        try {
+            status = openAccountRequest(_user, reqId);
+        } catch (StatusRuntimeException e) {
+            Code error = e.getStatus().getCode();
+            if (error == Status.DEADLINE_EXCEEDED.getCode() || error == Status.CANCELLED.getCode()
+                    || error == Status.UNAVAILABLE.getCode()) {
+                retries = 3;
+                e.printStackTrace();
+            }
+            else {
+                throw e;
+            }
+        }
+
+        // If request fails due to timeout or connection error, ask server if request was completed
+        while (retries > 0) {
+            try {
+                System.out.println("Checking status of openAccount request... Retries left: " + (retries-1));
+                status = checkOperationStatus(reqId);
+                retries = 0;
+            } catch (StatusRuntimeException e) {
+                Code error = e.getStatus().getCode();
+                if (!(error == Status.DEADLINE_EXCEEDED.getCode() || error == Status.CANCELLED.getCode()
+                        || error == Status.UNAVAILABLE.getCode())) {
+                    throw e;
+                }
+            }
+            retries--;
+        }
+        return status;
+        
+    }
+
+    // Sends a balance request and returns the balance (CHECK)
+    private int openAccountRequest(String _user, UUID reqId) throws RuntimeException, IOException {
+
         // already logged in an account
         if(this.clientKeys != null) {
             return 2;
         }
+
         // check if there is an account with that name already
         if(CryptoHelper.checkIfAccountExists(_user)) {
             return 3;
         }
+
         //gera as chaves do cliente
-        set_ClientKeys(CryptoHelper.generate_RSA_keyPair());
+        clientKeys = CryptoHelper.generate_RSA_keyPair();
+        user = _user;
 
         //guardar a chave publica num PKI e guardar a privada respetivamente
-        CryptoHelper.SaveKeyPair(_user, clientKeys);
+        CryptoHelper.SaveKeyPair(user,clientKeys);
 
-        UUID reqId = UUID.randomUUID();
-        int status = -1;
+        //chave publica (passar para Base64)
+        PublicKey client_pubkey = clientKeys.getPublic();
+        String key = CryptoHelper.encodeToBase64(client_pubkey.getEncoded());
 
-        for (Replica replica : replicas) {
-            status = lib.openAccountRequest(replica, _user, reqId);
-            System.out.println("Replica " + replica.getInstance() + " response: " + status);
+        openAccountContent msg = openAccountContent.newBuilder().setRequestId(reqId.toString()).setKey(key).setUser(_user).build();
+        long pow = CryptoHelper.getPoW(msg.toByteArray(), numZeroes);
+        openAccountRequest request = openAccountRequest.newBuilder().setMsg(msg).setPow(pow).build();
+        openAccountResponse response = _stub.withDeadlineAfter(timeoutMs, TimeUnit.MILLISECONDS).openAccount(request);
+
+        System.out.println("open account function server key: " + server_pubkey.toString());
+
+        //verify server signature
+        if(!CryptoHelper.verifySignature(response.getStatus().toByteArray(),response.getSignature(),server_pubkey)) {
+            throw new RuntimeException("Invalid signature");
         }
-        return status;
+
+        return response.getStatus().getStatus();
+    }
+
+    private String prepareAuditRequest(String _userKey) throws RuntimeException {
+        int retries = 3;
+        while (retries >= 0) {
+            try {
+                if (retries != 3) { System.out.println("Retrying Audit request... Retries left: " + retries); }
+                String response = auditRequest(_userKey);
+                return response;
+            } catch (StatusRuntimeException e) {
+                Code error = e.getStatus().getCode();
+                if (!(error == Status.DEADLINE_EXCEEDED.getCode() || error == Status.CANCELLED.getCode()
+                        || error == Status.UNAVAILABLE.getCode())) {
+                    throw e;
+                }
+                retries--;
+            }
+        }
+        return "Audit request failed";
     }
 
     // Sends a balance request and returns the balance (CHECK)
-    private String prepareAuditRequest(String _userKey) throws RuntimeException {
-        String response = "Audit request failed";
-        for (Replica replica : replicas) {
-            response = lib.auditRequest(replica, _userKey);
-            System.out.println("Replica " + replica.getInstance() + " response: " + response);
-        }
-        return response;
+    private String auditRequest(String _userKey) throws RuntimeException {
+
+        //get the pretend pubKey
+        PublicKey key = CryptoHelper.readRSAPublicKey(CryptoHelper.pki_path+"/" + _userKey + ".pub");
+        String key_string = CryptoHelper.encodeToBase64(key.getEncoded());
+
+        auditRequest request = auditRequest.newBuilder().setKey(key_string).build();
+        auditResponse response = _stub.withDeadlineAfter(timeoutMs, TimeUnit.MILLISECONDS).audit(request);
+
+        //verify server signature
+        /*if(!CryptoHelper.verifySignature(response.getMsg().getTransactionHistory().getBytes(StandardCharsets.UTF_8),response.getSignature(),server_pubkey)) {
+            throw new RuntimeException("Invalid signature");
+        }*/
+
+        return response.getMsg().getTransactionHistory();
+
     }
 
     private int prepareReceiveAmountRequest(String _userKey, String _transactionId) throws RuntimeException, IOException {
         UUID reqId = UUID.randomUUID();
-        int status = -1;
-        for (Replica replica : replicas) {
-            status = lib.receiveAmountRequest(replica, _userKey, _transactionId, reqId);
-            System.out.println("Replica " + replica.getInstance() + " response: " + status);
-        } 
+        int retries = 0, status = -1;
+
+        try {
+            String nonce = requestNonce();
+            status = receiveAmountRequest(_userKey, _transactionId, reqId, nonce);
+        } catch (StatusRuntimeException e) {
+            Code error = e.getStatus().getCode();
+            if (error == Status.DEADLINE_EXCEEDED.getCode() || error == Status.CANCELLED.getCode()
+                    || error == Status.UNAVAILABLE.getCode()) {
+                retries = 3;
+            }
+            else {
+                throw e;
+            }
+        }
+
+        // If request fails due to timeout or connection error, ask server if request was completed
+        while (retries > 0) {
+            try {
+                System.out.println("Checking status of receiveAmount request... Retries left: " + (retries-1));
+                status = checkOperationStatus(reqId);
+                retries = 0;
+            } catch (StatusRuntimeException e) {
+                Code error = e.getStatus().getCode();
+                if (!(error == Status.DEADLINE_EXCEEDED.getCode() || error == Status.CANCELLED.getCode()
+                        || error == Status.UNAVAILABLE.getCode())) {
+                    throw e;
+                }
+            }
+            retries--;
+        }
         return status;
     }
 
-    private String prepareCheckAccountRequest(String _userKey) {
-        String response = "CheckAccount request failed";
-        for (Replica replica : replicas) {
-            response = lib.checkAccountRequest(replica, _userKey);
-            System.out.println("Replica " + replica.getInstance() + " response: " + response);
+    // Sends a balance request and returns the balance (Check)
+    private int receiveAmountRequest(String _userKey, String _transactionId, UUID reqId, String nonce) throws RuntimeException {
+
+        //get the pretend pubKey
+        PublicKey key = CryptoHelper.readRSAPublicKey(CryptoHelper.pki_path+"/" + _userKey + ".pub");
+        String key_string = CryptoHelper.encodeToBase64(key.getEncoded());
+        
+        //construct the message
+        receiveAmountContent msg = receiveAmountContent.newBuilder()
+        .setRequestId(reqId.toString()).setKey(key_string).setTransactionId(_transactionId).setNonce(nonce).build();
+        long pow = CryptoHelper.getPoW(msg.toByteArray(), numZeroes);
+
+        //sign the message
+        String signature = CryptoHelper.encodeToBase64(CryptoHelper.signMessage(clientKeys.getPrivate(),msg.toByteArray()));
+
+        receiveAmountRequest request = receiveAmountRequest.newBuilder().setMsg(msg).setSignature(signature).setPow(pow).build();
+        receiveAmountResponse response = _stub.withDeadlineAfter(timeoutMs, TimeUnit.MILLISECONDS).receiveAmount(request);
+
+        //verify server signature
+        if(!CryptoHelper.verifySignature(response.getStatus().toByteArray(),response.getSignature(),server_pubkey)) {
+            throw new RuntimeException("Invalid signature");
         }
-        return response;
+
+        return response.getStatus().getStatus();
+
+    }
+
+    private String prepareCheckAccountRequest(String _userKey) {
+        int retries = 3;
+        while (retries >= 0) {
+            try {
+                if (retries != 3) { System.out.println("Retrying checkAccount request... Retries left: " + retries); }
+                String response = checkAccountRequest(_userKey);
+                return response;
+            } catch (StatusRuntimeException e) {
+                Code error = e.getStatus().getCode();
+                if (!(error == Status.DEADLINE_EXCEEDED.getCode() || error == Status.CANCELLED.getCode()
+                        || error == Status.UNAVAILABLE.getCode())) {
+                    throw e;
+                }
+                retries--;
+            }
+        }
+        return "CheckAccount request failed";
+    }
+
+    // Sends a balance request and returns the balance (Check)
+    private String checkAccountRequest(String _userKey) throws RuntimeException {
+
+        //get the pretend pubKey
+        PublicKey key = CryptoHelper.readRSAPublicKey(CryptoHelper.pki_path+"/" + _userKey + ".pub");
+        String key_string = CryptoHelper.encodeToBase64(key.getEncoded());
+
+        checkAccountRequest request = checkAccountRequest.newBuilder().setRid(-1).setKey(key_string).build();
+        checkAccountResponse response = _stub.withDeadlineAfter(timeoutMs, TimeUnit.MILLISECONDS).checkAccount(request);
+
+        checkAccountResMsg msg = response.getMsgResponse();
+
+        //verify server signature
+       /* if(!CryptoHelper.verifySignature(msg.toByteArray(),response.getSignature(),server_pubkey)) {
+            throw new RuntimeException("Invalid signature");
+        } */
+
+        return msg.getBalance() + msg.getPendingTransactions();
     }
 
     private int prepareSendAmountRequest(String amount, String source, String dest) throws RuntimeException, IOException {
         UUID reqId = UUID.randomUUID();
-        int status = -1;
-        for (Replica replica : replicas) {
-            status = lib.sendAmountRequest(replica, amount, source, dest, reqId);
-            System.out.println("Replica " + replica.getInstance() + " response: " + status);
+        int retries = 0, status = -1;
+
+        try {
+            String nonce = requestNonce();
+            status = sendAmountRequest(amount, source, dest, reqId, nonce);
+        } catch (StatusRuntimeException e) {
+            Code error = e.getStatus().getCode();
+            if (error == Status.DEADLINE_EXCEEDED.getCode() || error == Status.CANCELLED.getCode()
+                    || error == Status.UNAVAILABLE.getCode()) {
+                retries = 3;
+            } else {
+                throw e;
+            }
+        }
+
+        // If request fails due to timeout or connection error, ask server if request was completed
+        while (retries > 0) {
+            try {
+                System.out.println("Checking status of sendAmount request... Retries left: " + (retries - 1));
+                status = checkOperationStatus(reqId);
+                retries = 0;
+            } catch (StatusRuntimeException e) {
+                Code error = e.getStatus().getCode();
+                if (!(error == Status.DEADLINE_EXCEEDED.getCode() || error == Status.CANCELLED.getCode()
+                        || error == Status.UNAVAILABLE.getCode())) {
+                    throw e;
+                }
+            }
+            retries--;
         }
         return status;
+
     }
     
+
+    // Sends an amount request and returns the balance (CHECK)
+    private int sendAmountRequest(String amount, String source, String dest, UUID reqId, String nonce) throws RuntimeException {
+
+        int amountInt = Integer.parseInt(amount);
+        if (amountInt < 0)
+            throw new RuntimeException("Invalid amount to send");
+
+        // get source and dest key
+        String source_key = CryptoHelper.encodeToBase64(clientKeys.getPublic().getEncoded());
+        PublicKey dst_key = CryptoHelper.readRSAPublicKey(CryptoHelper.pki_path + "/" + dest + ".pub");
+        String destiny_key = CryptoHelper.encodeToBase64(dst_key.getEncoded());
+
+        //create the msg and signature
+        sendAmountContent msg = sendAmountContent.newBuilder().setRequestId(reqId.toString()).setAmount(amount)
+                                                    .setDestination(destiny_key).setSource(source_key).setNonce(nonce).build();
+        String signature = CryptoHelper.encodeToBase64(CryptoHelper.signMessage(clientKeys.getPrivate(),msg.toByteArray()));
+
+
+        long pow = CryptoHelper.getPoW(msg.toByteArray(), numZeroes);
+
+        //send the request for the server
+        sendAmountRequest request = sendAmountRequest.newBuilder().setMessage(msg).setTimestampSource(-1).setTimestampDest(-1).setPow(pow).setSignature(signature).build();
+        sendAmountResponse response = _stub.withDeadlineAfter(timeoutMs, TimeUnit.MILLISECONDS).sendAmount(request);
+
+        //verify server signature
+        System.out.println("recebi a resposta do servidor");
+        if(!CryptoHelper.verifySignature(response.getStatus().toByteArray(),response.getSignature(),server_pubkey)) {
+            throw new RuntimeException("Invalid signature");
+        }
+
+        return response.getStatus().getStatus();
+    }
+
     private int checkOperationStatus(UUID reqId) throws RuntimeException {
-        /* FIXME!!
         String key = CryptoHelper.encodeToBase64(clientKeys.getPublic().getEncoded());
 
         checkStatusRequest request = checkStatusRequest.newBuilder().setRequestId(reqId.toString()).setKey(key).build();
@@ -149,15 +398,11 @@ public class ClientServiceImpl {
             throw new RuntimeException("Invalid signature");
         }
         return response.getStatus().getStatus();
-        */
-        return 50;
     }
 
-    // Sends a terminates the service by closing the channels of all replicas
+    // Sends a terminates the service by closing the channel
     public void terminateService() {
-        for (Replica replica : replicas) {
-            replica.closeChannel();
-        }
+        _channel.shutdownNow();
     }
 
     // Performs the commands given in the system in or command file
@@ -179,6 +424,7 @@ public class ClientServiceImpl {
                     if (args.length != 2)
                         throw new RuntimeException("Invalid command open_account");
                     int status = this.prepareOpenAccountRequest(args[1]);
+                    System.out.println(status);
                     if(status == 1){
                         response = "OK";
                     } else if (status == -1) {
