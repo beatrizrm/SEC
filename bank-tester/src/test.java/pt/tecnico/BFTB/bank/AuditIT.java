@@ -34,11 +34,13 @@ public class AuditIT extends BaseIT {
         KeyPair keyPairDiogo = CryptoHelper.generate_RSA_keyPair();
 
         openAccountRequest openAccRequest = openAccountRequest.newBuilder().setRequestId(UUID.randomUUID().toString()).setKey(CryptoHelper.encodeToBase64(keyPairDiogo.getPublic().getEncoded())).setUser("Diogo").build();
-        openAccountResponse openAccResponse = frontend.openAccount(openAccRequest);
+        frontend.openAccount(openAccRequest);
 
-        auditRequest request = auditRequest.newBuilder().setKey(CryptoHelper.encodeToBase64(keyPairDiogo.getPublic().getEncoded())).build();
+        auditRequest request = auditRequest.newBuilder()
+                .setKey(CryptoHelper.encodeToBase64(keyPairDiogo.getPublic().getEncoded()))
+                .setRid("0").build();
         auditResponse response = frontend.audit(request);
-        assertEquals("", response.getTransactionHistory());
+        assertEquals("", response.getMsg().getTransactionHistory());
     }
     // Sends an invalid userKeyPair and an exception is raised
     @Test
@@ -48,7 +50,9 @@ public class AuditIT extends BaseIT {
         openAccountRequest openAccRequest = openAccountRequest.newBuilder().setRequestId(UUID.randomUUID().toString()).setKey(CryptoHelper.encodeToBase64(keyPairDiogo.getPublic().getEncoded())).setUser("Diogo").build();
         frontend.openAccount(openAccRequest);
 
-        auditRequest request = auditRequest.newBuilder().setKey("dsfdgdfgdfgdfgdfgs258340t3094g053jg034jgetgjdfgjdkjlfghndçjhçksfhtksrfdkhdfklhdlkhlkfsdhlkdhglkdklhdfkljh4t94hy0hr0hbr0h0rhr0gofghlksfhlkjfdhlkjdhfhkljdfkjlhdkljfhlkdfhlkdfhlkdfhldkfhlkjdfhildfhldifht4h49jhflihg").build();
+        auditRequest request = auditRequest.newBuilder()
+                .setKey("dsfdgdfgdfgdfgdfgs258340t3094g053jg034jgetgjdfgjdkjlfghndçjhçksfhtksrfdkhdfklhdlkhlkfsdhlkdhglkdklhdfkljh4t94hy0hr0hbr0h0rhr0gofghlksfhlkjfdhlkjdhfhkljdfkjlhdkljfhlkdfhlkdfhlkdfhldkfhlkjdfhildfhldifht4h49jhflihg")
+                .setRid("0").build();
         assertEquals(INVALID_ARGUMENT.getCode(), assertThrows(StatusRuntimeException.class, () -> frontend.audit(request)).getStatus().getCode());
     }
 }

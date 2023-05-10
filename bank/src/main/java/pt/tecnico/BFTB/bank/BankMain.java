@@ -12,15 +12,18 @@ public class BankMain {
 
         System.out.println(BankMain.class.getSimpleName());
 
+        int instance = Integer.parseInt(args[3]);
+        int bankPort = 8080 + instance;
+
         try{
             // start gRPC server
-            final BindableService impl = new BankServiceImpl(args[0], args[1], args[2], Integer.parseInt(args[3]), 5432);
+            final BindableService impl = new BankServiceImpl(args[0], args[1], args[2], instance, 5432);
             // Create a new server to listen on port
-            Server server = ServerBuilder.forPort(8080 + Integer.parseInt(args[3])).addService(impl).build();
+            Server server = ServerBuilder.forPort(bankPort).addService(impl).build();
 
             server.start();
 
-            System.out.println("Server " + args[3] + " Started");
+            System.out.println("Server " + args[3] + " Started on port " + bankPort);
 
             server.awaitTermination();
         } catch (Exception e){

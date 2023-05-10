@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.security.*;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.X509EncodedKeySpec;
@@ -161,4 +162,47 @@ public class CryptoHelper {
             return null;
         }
     }
+
+    public static long getPoW(byte[] msg, int numZeroes) {
+        long solution = 0;
+        StringBuilder sb;
+        try {
+            do {
+                MessageDigest sha = MessageDigest.getInstance("SHA-256");
+                byte[] solution_arr = ByteBuffer.allocate(Long.BYTES).putLong(solution).array();
+                sha.update(msg);
+                sha.update(solution_arr);
+                byte[] hash = sha.digest();
+                sb = new StringBuilder();
+                for (byte b : hash) {
+                    sb.append(String.format("%02X", b));
+                }
+                solution++;
+            } while (!sb.substring(0,numZeroes).equals("0".repeat(numZeroes)));
+            return solution-1;
+        } catch (NoSuchAlgorithmException e) {
+            e.printStackTrace();
+            return -1;
+        }
+    }
+
+    public static boolean isPoWValid(byte[] msg, int numZeroes, long solution) {
+        MessageDigest sha;
+        try {
+            sha = MessageDigest.getInstance("SHA-256");
+            byte[] solution_arr = ByteBuffer.allocate(Long.BYTES).putLong(solution).array();
+            sha.update(msg);
+            sha.update(solution_arr);
+            byte[] hash = sha.digest();
+            StringBuilder sb = new StringBuilder();
+            for (byte b : hash) {
+                sb.append(String.format("%02X", b));
+            }
+            return sb.substring(0,numZeroes).equals("0".repeat(numZeroes));
+        } catch (NoSuchAlgorithmException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
 }
